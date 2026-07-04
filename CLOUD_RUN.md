@@ -4,6 +4,25 @@ This deployment path runs the same static Zone Trip site in a container on Cloud
 
 Cloud Run is useful for public review and lightweight availability. It is **not** the charter-compliant booth runtime for participant material unless the deployment is explicitly scoped to public, non-sensitive static content. The standalone Linux path remains the default for local/offline installations.
 
+## Processor Simulator
+
+The processor simulator is a separate Cloud Run service that approximates the local LLM hardware path:
+
+- raw audio input
+- Whisper STT through `faster-whisper`
+- Ollama LLM processing
+- constitutionally filtered derived signals
+
+Deploy it with:
+
+```sh
+./scripts/deploy-cloud-run-processor.sh YOUR_PROJECT_ID us-central1 zonetrip-processor
+```
+
+This uses one NVIDIA L4 GPU, `min-instances=0`, and `max-instances=1`. It should be treated as a sizing and behavior simulator for equivalent local hardware, not as the default participant-material runtime.
+
+The local equivalent is documented in `PROCESSOR.md`.
+
 ## Behavior
 
 - Containerized static site

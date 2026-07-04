@@ -1,38 +1,32 @@
 # Hardware Assumption
 
-Zone Trip assumes one local PC per booth.
+Zone Trip assumes one Linux box per booth.
 
-Each booth PC is its own capture and processing boundary. Participant audio should not be routed to a shared central booth server during active capture unless a later constitutional review explicitly approves that topology.
+That single booth PC is the microphone capture, STT, LLM, processor, and temporary storage boundary. Participant audio should not be routed to a visitor device or shared central server during active capture unless a later constitutional review explicitly approves that topology.
 
-## Budget Booth PC
+## Booth PC Target
 
-The $500-class booth PC target is a local controller and light processing node, not a replacement for a cloud GPU service.
+The booth PC is not just a kiosk controller. It must run the local processor:
 
-Minimum practical target:
+- local microphone capture
+- Whisper STT through `faster-whisper`
+- Ollama LLM inference
+- constitutionally filtered derived-signal updates
+- nightly burn and non-content deletion records
 
-- AMD Ryzen 5 7640HS, Ryzen 7 7840HS, or comparable recent mini PC CPU
-- 32 GB RAM
-- 1 TB NVMe storage
-- 2.5 GbE networking
+Practical target:
+
+- NVIDIA GPU with 16 GB VRAM minimum
+- 24 GB VRAM preferred for larger local models
+- 64 GB system RAM
+- 1 TB NVMe minimum
 - Ubuntu Server 24.04 LTS
-- Docker or systemd service deployment
-- Optional Coral USB or M.2 accelerator for small classifiers only
+- NVIDIA driver stack
+- Ollama
+- Python processor service from `services/processor/`
 
-Expected local responsibilities:
+Fallback smaller hardware may simulate the interface and capture audio, but it is not a complete Zone Trip booth if it cannot run local STT and LLM processing.
 
-- serve the booth interface
-- capture microphone input locally
-- hold raw audio only in temporary local storage or browser memory
-- run light local speech-to-text or transient interpretation where feasible
-- run local redaction and derived-signal updates where feasible
-- execute nightly burn and produce non-content deletion records
+## Cloud Run Simulator
 
-Not expected from the $500-class booth PC:
-
-- large GPU-class model inference
-- high-throughput multi-booth processing
-- cloud-equivalent L4 GPU performance
-- long-term storage of raw participant material
-- shared central collection of raw booth audio
-
-If stronger local synthesis is needed, add a separate steward-reviewed local AI workstation. That machine must still remain inside the deployment boundary and must not become a raw-material archive.
+Cloud Run with an L4 GPU simulates this one-box booth PC for cost, latency, model sizing, and cold-start testing. It is not the constitutional default for participant material.

@@ -1,0 +1,111 @@
+# Zone Trip Processor
+
+The processor is the local AI boundary for speech-to-text and derived world-model updates.
+
+It is designed to run on the same Linux booth PC as the microphone capture process. Cloud Run is only a simulator for sizing and operational review. GitHub Pages is only a visual/browser simulation of the installation.
+
+## Local Runtime
+
+Local path:
+
+1. A microphone connected to the booth PC captures audio.
+2. The local capture process sends temporary audio to the processor on the same Linux box.
+3. Processor runs Whisper through `faster-whisper`.
+4. Processor sends the STT transcript to local Ollama.
+5. Ollama returns constitutionally filtered derived signals.
+6. Temporary audio and transcript buffers die with the request.
+
+Default local endpoints:
+
+- `GET http://127.0.0.1:8090/health`
+- `POST http://127.0.0.1:8090/process-audio`
+- `POST http://127.0.0.1:8090/process-stt`
+
+## Install On The Booth PC
+
+Install the static site first:
+
+```sh
+sudo ./install.sh
+```
+
+Then install Ollama and the processor on the same machine:
+
+```sh
+sudo ./scripts/install-local-ai.sh
+```
+
+The installer:
+
+- installs Ollama if missing
+- creates `/opt/zonetrip/.venv`
+- installs `services/processor/requirements.txt`
+- pulls `llama3.1:8b-instruct-q4_K_M` by default
+- installs `zonetrip-processor.service`
+
+Override the model before installing:
+
+```sh
+sudo ZONETRIP_OLLAMA_MODEL=mistral:7b-instruct ./scripts/install-local-ai.sh
+```
+
+## Capture From The Booth Microphone
+
+The real booth path does not require a participant browser. For a single capture pass:
+
+```sh
+ZONETRIP_CAPTURE_SECONDS=90 ./bin/zonetrip-capture-once
+```
+
+The helper records from the local ALSA default input and posts the temporary audio to `http://127.0.0.1:8090/process-audio`. Override the input device with:
+
+```sh
+ZONETRIP_AUDIO_DEVICE=hw:1,0 ./bin/zonetrip-capture-once
+```
+
+The browser/Pages route can still simulate capture for review, but it is not the real participant interface.
+
+## Cloud Run Simulator
+
+Cloud Run can simulate the one-box booth PC with an L4 GPU:
+
+```sh
+./scripts/deploy-cloud-run-processor.sh PROJECT_ID us-central1 zonetrip-processor
+```
+
+The simulator container runs:
+
+- Ollama
+- `faster-whisper`
+- FastAPI processor endpoints
+
+Use it to estimate latency, memory, model size, and cold-start behavior for the equivalent local Linux box. It is not the default participant-material runtime.
+
+## API
+
+Raw audio:
+
+```sh
+curl -X POST http://127.0.0.1:8090/process-audio \
+  -H 'Content-Type: audio/webm' \
+  --data-binary @sample.webm
+```
+
+Existing STT text:
+
+```sh
+curl -X POST http://127.0.0.1:8090/process-stt \
+  -H 'Content-Type: application/json' \
+  -d '{"transcript":"I feel the community is changing, but I am not sure what we are losing."}'
+```
+
+Response fields are limited to constitutionally allowed derived signals:
+
+- `tensions`
+- `contradictions`
+- `absences`
+- `symbolic_patterns`
+- `minority_signals`
+- `open_questions`
+- `rejected_content`
+- `raw_transcript_retained`

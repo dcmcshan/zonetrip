@@ -1,0 +1,29 @@
+[Unit]
+Description=Zone Trip local Whisper and Ollama processor
+After=network.target ollama.service
+Wants=ollama.service
+
+[Service]
+Type=simple
+User=zonetrip
+Group=zonetrip
+WorkingDirectory=/opt/zonetrip/services/processor
+Environment=PORT=8090
+Environment=ZONETRIP_PROCESSOR_HOST=127.0.0.1
+Environment=OLLAMA_URL=http://127.0.0.1:11434
+Environment=ZONETRIP_OLLAMA_MODEL=llama3.1:8b-instruct-q4_K_M
+Environment=ZONETRIP_WHISPER_MODEL=base
+Environment=ZONETRIP_WHISPER_DEVICE=auto
+Environment=ZONETRIP_WHISPER_COMPUTE_TYPE=auto
+Environment=ZONETRIP_PULL_MODELS=0
+ExecStart=/bin/sh -c '/opt/zonetrip/.venv/bin/uvicorn app:app --host "$ZONETRIP_PROCESSOR_HOST" --port "$PORT"'
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/tmp
+
+[Install]
+WantedBy=multi-user.target

@@ -57,3 +57,19 @@ Run this before packaging or deployment:
 ```
 
 The audit fails if runtime files contain external URL references, common browser network APIs, or missing required local files.
+
+## One-Box AI Booth
+
+For the full local booth, the same Linux box also runs the processor:
+
+- Zone Trip UI: `http://127.0.0.1:8080/`
+- Zone Trip processor: `http://127.0.0.1:8090/`
+- Ollama: `http://127.0.0.1:11434/`
+
+After `sudo ./install.sh`, run:
+
+```sh
+sudo ./scripts/install-local-ai.sh
+```
+
+See `PROCESSOR.md`.

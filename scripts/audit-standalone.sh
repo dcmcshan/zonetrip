@@ -24,6 +24,7 @@ test -f favicon.svg
 test -f CNAME
 grep -qx 'zonetrip.castalia.institute' CNAME
 test -f HARDWARE.md
+test -f PROCESSOR.md
 test -f docs/Zone_Trip_White_Paper_First_Review.pdf
 test -f assets/stage-microphone-mobile.jpg
 test -f assets/stage-microphone-desktop.jpg
@@ -33,6 +34,14 @@ test -f assets/microphone-overlay.png
 test -f assets/mirror-mask.svg
 test -f vendor/three/three.module.js
 test -f vendor/three/LICENSE
+test -f services/processor/app.py
+test -f services/processor/requirements.txt
+test -f services/processor/Dockerfile
+test -f services/processor/start.sh
+test -f deploy/systemd/zonetrip-processor.service
+test -x scripts/install-local-ai.sh
+test -x scripts/deploy-cloud-run-processor.sh
 test -x bin/zonetrip-serve
+test -x bin/zonetrip-capture-once
 
 echo "Standalone audit passed."

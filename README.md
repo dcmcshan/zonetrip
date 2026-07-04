@@ -4,7 +4,7 @@ Zone Trip is a browser-based listening interface backed by the working white pap
 
 **Zone Trip: A Non-Directive Local AI Mirror for Community Self-Understanding**
 
-The front page is the participant interface. The manifesto route presents the project's core question, constitutional limits, local-first architecture, deployment gates, and collaborator needs.
+The front page simulates the physical installation for review. The real booth is a microphone connected to one Linux box running capture, Whisper, Ollama, and the processor locally. The manifesto route presents the project's core question, constitutional limits, local-first architecture, deployment gates, and collaborator needs.
 
 ## Live Site
 
@@ -38,6 +38,12 @@ Build a Linux deployment archive:
 
 See `DEPLOY.md` for systemd installation and manual run instructions.
 
+## Local AI Processor
+
+The local AI path uses Whisper plus Ollama on equivalent local hardware. Cloud Run is treated as a simulator for this processor, not the charter-compliant default runtime.
+
+See `PROCESSOR.md`.
+
 ## Cloud Run Review Deployment
 
 For a public review endpoint, the same static site can deploy to Google Cloud Run with scale-to-zero:
@@ -50,8 +56,8 @@ See `CLOUD_RUN.md`. This is intended for public static content review, not for p
 
 ## Project Structure
 
-- `index.html` - browser-based listening interface
-- `booth.html` - compatibility route for the listening interface
+- `index.html` - browser-based installation simulator
+- `booth.html` - compatibility route for the simulator
 - `manifesto/` - project manifesto and deployment doctrine
 - `styles.css` - responsive visual system
 - `script.js` - content data and rendering
@@ -61,10 +67,13 @@ See `CLOUD_RUN.md`. This is intended for public static content review, not for p
 - `CNAME` - GitHub Pages custom domain
 - `WORLD_MODEL.md` - boundary for derived model updates without transcript storage
 - `HARDWARE.md` - one-PC-per-booth hardware assumption
+- `PROCESSOR.md` - local Whisper/Ollama processor and Cloud Run simulator
 - `assets/` - local responsive stage imagery
 - `vendor/three/` - vendored Three.js runtime module
+- `services/processor/` - FastAPI processor for Whisper and Ollama
 - `docs/` - source white paper PDF
 - `bin/zonetrip-serve` - local static server
+- `bin/zonetrip-capture-once` - local microphone capture helper for the real booth
 - `deploy/systemd/` - optional systemd unit
 - `scripts/` - standalone audit and Linux package scripts
 - `Dockerfile` - Cloud Run compatible container
