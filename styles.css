@@ -749,6 +749,42 @@ figcaption {
   min-height: 100%;
 }
 
+.model-examples {
+  display: grid;
+  gap: 1rem;
+}
+
+.model-example {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  padding: 1rem;
+  border: 1px solid rgba(21, 25, 31, 0.08);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.74);
+}
+
+.model-example pre {
+  min-height: 100%;
+  margin: 0;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  border: 1px solid rgba(21, 25, 31, 0.08);
+  border-radius: 6px;
+  padding: 0.85rem;
+  color: #dce7ee;
+  background: #071017;
+  font-family:
+    "SFMono-Regular", Consolas, "Liberation Mono", Menlo, ui-monospace, monospace;
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.model-example code {
+  font: inherit;
+}
+
 .section-grid {
   display: grid;
   grid-template-columns: minmax(18rem, 0.72fr) minmax(0, 1.28fr);
@@ -1138,6 +1174,10 @@ footer a {
   }
 
   .architecture-columns {
+    grid-template-columns: 1fr;
+  }
+
+  .model-example {
     grid-template-columns: 1fr;
   }
 }
