@@ -12,6 +12,7 @@ import argparse
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 import os
+import signal
 
 
 class StaticHandler(SimpleHTTPRequestHandler):
@@ -32,7 +33,11 @@ class StaticHandler(SimpleHTTPRequestHandler):
 def main() -> None:
     parser = argparse.ArgumentParser(description="Serve the Zone Trip static site.")
     parser.add_argument("--host", default=os.environ.get("ZONETRIP_HOST", "127.0.0.1"))
-    parser.add_argument("--port", type=int, default=int(os.environ.get("ZONETRIP_PORT", "8080")))
+    parser.add_argument(
+        "--port",
+        type=int,
+        default=int(os.environ.get("ZONETRIP_PORT", os.environ.get("PORT", "8080"))),
+    )
     parser.add_argument(
         "--root",
         default=os.environ.get("ZONETRIP_ROOT", str(Path(__file__).resolve().parents[1])),
@@ -46,11 +51,16 @@ def main() -> None:
 
     os.chdir(root)
     server = ThreadingHTTPServer((args.host, args.port), StaticHandler)
+    signal.signal(signal.SIGTERM, lambda _signum, _frame: raise_keyboard_interrupt())
     print(f"Zone Trip serving {root} at http://{args.host}:{args.port}/", flush=True)
     try:
         server.serve_forever()
     except KeyboardInterrupt:
         print("\nZone Trip server stopped.", flush=True)
+
+
+def raise_keyboard_interrupt() -> None:
+    raise KeyboardInterrupt
 
 
 if __name__ == "__main__":

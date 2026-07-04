@@ -38,6 +38,16 @@ Build a Linux deployment archive:
 
 See `DEPLOY.md` for systemd installation and manual run instructions.
 
+## Cloud Run Review Deployment
+
+For a public review endpoint, the same static site can deploy to Google Cloud Run with scale-to-zero:
+
+```sh
+./scripts/deploy-cloud-run.sh YOUR_PROJECT_ID us-central1 zonetrip
+```
+
+See `CLOUD_RUN.md`. This is intended for public static content review, not for participant-material processing under the local/offline charter.
+
 ## Project Structure
 
 - `index.html` - project site shell and sections
@@ -47,6 +57,7 @@ See `DEPLOY.md` for systemd installation and manual run instructions.
 - `bin/zonetrip-serve` - local static server
 - `deploy/systemd/` - optional systemd unit
 - `scripts/` - standalone audit and Linux package scripts
+- `Dockerfile` - Cloud Run compatible container
 
 ## Product Direction
 

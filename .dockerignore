@@ -1,0 +1,10 @@
+.git
+.gitignore
+dist
+*.tar.gz
+.DS_Store
+README.md
+DEPLOY.md
+deploy
+install.sh
+scripts
