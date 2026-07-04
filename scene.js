@@ -26,6 +26,34 @@ const cameraBase = {
   target: new THREE.Vector3(),
 };
 const cameraTarget = new THREE.Vector3();
+const cameraPresets = {
+  front: {
+    position: new THREE.Vector3(0, 0.55, 10.2),
+    target: new THREE.Vector3(0, -0.05, -0.2),
+    fov: 44,
+  },
+  back: {
+    position: new THREE.Vector3(0, 0.55, -10.2),
+    target: new THREE.Vector3(0, -0.05, 0),
+    fov: 44,
+  },
+  left: {
+    position: new THREE.Vector3(-10.2, 0.55, 0),
+    target: new THREE.Vector3(0, -0.05, 0),
+    fov: 44,
+  },
+  right: {
+    position: new THREE.Vector3(10.2, 0.55, 0),
+    target: new THREE.Vector3(0, -0.05, 0),
+    fov: 44,
+  },
+  top: {
+    position: new THREE.Vector3(0, 8.7, 6.2),
+    target: new THREE.Vector3(0, -0.38, 0),
+    fov: 48,
+  },
+};
+let cameraPreset = new URLSearchParams(window.location.search).get("view") || "";
 
 const imu = {
   supported: "DeviceOrientationEvent" in window,
@@ -97,6 +125,14 @@ const ledMaterial = new THREE.MeshStandardMaterial({
   transparent: true,
 });
 
+const stageRiserMaterial = new THREE.MeshStandardMaterial({
+  color: 0x111820,
+  roughness: 0.58,
+  metalness: 0.22,
+  emissive: 0x03060a,
+  emissiveIntensity: 0.55,
+});
+
 const seamMaterial = new THREE.LineBasicMaterial({
   color: 0x4c6a87,
   transparent: true,
@@ -105,6 +141,7 @@ const seamMaterial = new THREE.LineBasicMaterial({
 const microphoneBaseTarget = new THREE.Vector3(0, -1.34, 0.72);
 const wallSpotLights = [];
 const wallSpotBars = [];
+const exteriorSeams = [];
 const lightingState = {
   powered: true,
   currentLevel: 1,
@@ -125,6 +162,49 @@ function addPanel(width, height, x, y, z, rotY = 0, material = wallMaterial) {
   return mesh;
 }
 
+function facetVectors(angle) {
+  return {
+    radial: new THREE.Vector3(Math.sin(angle), 0, Math.cos(angle)),
+    tangent: new THREE.Vector3(Math.cos(angle), 0, -Math.sin(angle)),
+  };
+}
+
+function addFacetPanel(
+  angle,
+  bottomRadius,
+  topRadius,
+  yBottom,
+  yTop,
+  widthScale = 0.96,
+  material = wallMaterial,
+) {
+  const { radial, tangent } = facetVectors(angle);
+  const bottomHalfWidth = bottomRadius * Math.tan(Math.PI / 8) * widthScale;
+  const topHalfWidth = topRadius * Math.tan(Math.PI / 8) * widthScale;
+  const points = [
+    radial.clone().multiplyScalar(bottomRadius).add(tangent.clone().multiplyScalar(-bottomHalfWidth)).setY(yBottom),
+    radial.clone().multiplyScalar(bottomRadius).add(tangent.clone().multiplyScalar(bottomHalfWidth)).setY(yBottom),
+    radial.clone().multiplyScalar(topRadius).add(tangent.clone().multiplyScalar(topHalfWidth)).setY(yTop),
+    radial.clone().multiplyScalar(topRadius).add(tangent.clone().multiplyScalar(-topHalfWidth)).setY(yTop),
+  ];
+  const geometry = new THREE.BufferGeometry().setFromPoints(points);
+  geometry.setIndex([0, 1, 2, 0, 2, 3]);
+  geometry.computeVertexNormals();
+  const mesh = new THREE.Mesh(geometry, material);
+  booth.add(mesh);
+  const edges = new THREE.LineSegments(new THREE.EdgesGeometry(geometry), seamMaterial);
+  booth.add(edges);
+  return mesh;
+}
+
+function addRadialBox(angle, radius, y, width, height, depth, material = trimMaterial) {
+  const mesh = new THREE.Mesh(new THREE.BoxGeometry(width, height, depth), material);
+  mesh.position.set(Math.sin(angle) * radius, y, Math.cos(angle) * radius);
+  mesh.rotation.y = angle;
+  booth.add(mesh);
+  return mesh;
+}
+
 function addSeam(length, x, y, z, rotY = 0, rotZ = 0) {
   const geometry = new THREE.BufferGeometry().setFromPoints([
     new THREE.Vector3(-length / 2, 0, 0),
@@ -137,14 +217,31 @@ function addSeam(length, x, y, z, rotY = 0, rotZ = 0) {
   return seam;
 }
 
-function addLightBar(x, y, z, rotY = 0) {
-  const bar = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.055, 0.06), ledMaterial);
-  bar.position.set(x, y, z);
-  bar.rotation.y = rotY;
+function addFacetLine(angle, radius, y, offset, length, tilt = 0) {
+  const { radial, tangent } = facetVectors(angle);
+  const geometry = new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(-length / 2, 0, 0),
+    new THREE.Vector3(length / 2, 0, 0),
+  ]);
+  const line = new THREE.Line(geometry, seamMaterial);
+  const position = radial.clone().multiplyScalar(radius).add(tangent.multiplyScalar(offset));
+  line.position.set(position.x, y, position.z);
+  line.rotation.set(0, angle, tilt);
+  booth.add(line);
+  exteriorSeams.push(line);
+  return line;
+}
+
+function addLightBar(angle, radius, y, offset = 0) {
+  const { radial, tangent } = facetVectors(angle);
+  const position = radial.clone().multiplyScalar(radius).add(tangent.multiplyScalar(offset));
+  const bar = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.055, 0.09), ledMaterial);
+  bar.position.set(position.x, y, position.z);
+  bar.rotation.y = angle;
   booth.add(bar);
   wallSpotBars.push(bar);
-  const light = new THREE.SpotLight(0xd8e9ff, 1.45, 6.8, 0.34, 0.72, 1.35);
-  light.position.set(x, y - 0.04, z + 0.08);
+  const light = new THREE.SpotLight(0xd8e9ff, 1.35, 7.5, 0.36, 0.74, 1.35);
+  light.position.set(position.x, y - 0.05, position.z);
   light.target.position.copy(microphoneBaseTarget);
   booth.add(light, light.target);
   wallSpotLights.push(light);
@@ -269,19 +366,62 @@ function updateCameraFromSensors() {
   camera.lookAt(cameraTarget);
 }
 
-const rear = addPanel(3.65, 3.25, 0, 0.7, -2.7);
-const leftRear = addPanel(2.1, 3.1, -2.05, 0.62, -2.16, -0.62);
-const rightRear = addPanel(2.1, 3.1, 2.05, 0.62, -2.16, 0.62);
-const leftFront = addPanel(1.75, 2.75, -3.0, 0.46, -0.72, -0.28);
-const rightFront = addPanel(1.75, 2.75, 3.0, 0.46, -0.72, 0.28);
+function setCameraPreset(name) {
+  if (!cameraPresets[name]) {
+    return false;
+  }
+  cameraPreset = name;
+  resize();
+  return true;
+}
 
-for (const [x, y, z, rotY] of [
-  [-1.1, 2.55, -2.72, 0],
-  [1.1, 2.55, -2.72, 0],
-  [-2.45, 2.42, -1.6, -0.62],
-  [2.45, 2.42, -1.6, 0.62],
-]) {
-  addPanel(1.95, 0.72, x, y, z, rotY, wallMaterial);
+const shell = {
+  bottomRadius: 3.08,
+  topRadius: 2.42,
+  baseY: -1.34,
+  shoulderY: 1.78,
+  roofY: 2.52,
+};
+const frontAngle = 0;
+const facetAngles = Array.from({ length: 8 }, (_, index) => index * Math.PI / 4);
+
+for (const angle of facetAngles) {
+  if (angle === frontAngle) {
+    continue;
+  }
+  addFacetPanel(angle, shell.bottomRadius, shell.topRadius, shell.baseY, shell.shoulderY);
+}
+
+for (const side of [-1, 1]) {
+  const angle = side * Math.PI / 8;
+  addFacetPanel(angle, shell.bottomRadius, shell.topRadius, shell.baseY, shell.shoulderY, 0.34);
+}
+
+const doorFrameMaterial = new THREE.MeshStandardMaterial({
+  color: 0x070a0f,
+  roughness: 0.34,
+  metalness: 0.72,
+  emissive: 0x010306,
+  emissiveIntensity: 0.28,
+});
+addRadialBox(0, shell.bottomRadius - 0.02, 0.04, 0.18, 2.72, 0.26, doorFrameMaterial).position.x = -0.84;
+addRadialBox(0, shell.bottomRadius - 0.02, 0.04, 0.18, 2.72, 0.26, doorFrameMaterial).position.x = 0.84;
+addRadialBox(0, shell.topRadius + 0.12, 1.46, 1.88, 0.18, 0.28, doorFrameMaterial);
+
+const baseRing = new THREE.Mesh(
+  new THREE.CylinderGeometry(3.22, 3.38, 0.36, 8, 1, false),
+  stageRiserMaterial,
+);
+baseRing.position.set(0, shell.baseY - 0.11, 0);
+baseRing.scale.z = 0.72;
+booth.add(baseRing);
+const baseEdges = new THREE.LineSegments(new THREE.EdgesGeometry(baseRing.geometry), seamMaterial);
+baseEdges.position.copy(baseRing.position);
+baseEdges.scale.copy(baseRing.scale);
+booth.add(baseEdges);
+
+for (const angle of facetAngles) {
+  addRadialBox(angle + Math.PI / 8, 3.08, 0.18, 0.08, 2.95, 0.12, trimMaterial);
 }
 
 const stageDeck = new THREE.Mesh(new THREE.CylinderGeometry(2.6, 2.95, 0.18, 8), floorMaterial);
@@ -292,14 +432,6 @@ booth.add(stageDeck);
 const lowerFloor = new THREE.Mesh(new THREE.BoxGeometry(6.2, 0.12, 2.3), floorMaterial);
 lowerFloor.position.set(0, -1.75, 2.48);
 booth.add(lowerFloor);
-
-const stageRiserMaterial = new THREE.MeshStandardMaterial({
-  color: 0x111820,
-  roughness: 0.58,
-  metalness: 0.22,
-  emissive: 0x03060a,
-  emissiveIntensity: 0.55,
-});
 
 const stageStep = new THREE.Mesh(new THREE.BoxGeometry(5.4, 0.34, 0.2), stageRiserMaterial);
 stageStep.position.set(0, -1.58, 1.52);
@@ -323,7 +455,7 @@ stageLip.position.set(0, -1.32, 1.4);
 booth.add(stageLip);
 
 const roof = new THREE.Mesh(
-  new THREE.CylinderGeometry(2.7, 3.35, 0.58, 8),
+  new THREE.CylinderGeometry(0.9, 2.52, 0.74, 8),
   new THREE.MeshStandardMaterial({
     color: 0x121923,
     roughness: 0.68,
@@ -332,7 +464,7 @@ const roof = new THREE.Mesh(
     emissiveIntensity: 0.5,
   }),
 );
-roof.position.set(0, 2.35, -1.16);
+roof.position.set(0, shell.roofY, 0);
 roof.scale.z = 0.72;
 booth.add(roof);
 const roofEdges = new THREE.LineSegments(new THREE.EdgesGeometry(roof.geometry), seamMaterial);
@@ -344,30 +476,16 @@ const desk = new THREE.Mesh(new THREE.BoxGeometry(3.35, 0.42, 0.34), trimMateria
 desk.position.set(0, -0.7, -2.55);
 booth.add(desk);
 
-for (const seam of [
-  [1.15, -1.06, 1.12, -2.58, 0, -0.72],
-  [1.1, 1.04, 1.05, -2.58, 0, 0.74],
-  [0.88, -1.88, 0.86, -2.12, -0.62, 0.86],
-  [0.88, 1.88, 0.86, -2.12, 0.62, -0.86],
-  [1.0, -2.88, 0.42, -0.7, -0.28, 0.86],
-  [1.0, 2.88, 0.42, -0.7, 0.28, -0.86],
-  [0.92, -2.7, 1.58, -0.72, -0.28, -0.55],
-  [0.92, 2.7, 1.58, -0.72, 0.28, 0.55],
-]) {
-  addSeam(...seam);
+for (const angle of facetAngles) {
+  if (angle !== frontAngle) {
+    addFacetLine(angle, 3.04, 0.18, -0.44, 0.86, -0.68);
+    addFacetLine(angle, 2.88, 0.78, 0.36, 0.78, 0.62);
+    addFacetLine(angle, 2.7, 1.32, -0.1, 0.62, -0.18);
+  }
 }
 
-for (const spot of [
-  [0, 2.28, -2.42, 0],
-  [-1.32, 2.22, -2.42, -0.28],
-  [1.32, 2.22, -2.42, 0.28],
-  [-2.28, 2.1, -1.72, -0.62],
-  [2.28, 2.1, -1.72, 0.62],
-  [-2.92, 1.96, -0.6, -0.28],
-  [2.92, 1.96, -0.6, 0.28],
-  [0, 1.92, 0.42, 0],
-]) {
-  addLightBar(...spot);
+for (const angle of facetAngles) {
+  addLightBar(angle, 2.24, 1.78, 0);
 }
 
 const micMaterial = new THREE.MeshBasicMaterial({
@@ -382,6 +500,10 @@ scene.add(microphone);
 
 const ambient = new THREE.HemisphereLight(0x5f7188, 0x030407, 0.18);
 scene.add(ambient);
+const exteriorFill = new THREE.DirectionalLight(0x9fb8d6, 1.15);
+exteriorFill.position.set(4, 5.2, 5.5);
+exteriorFill.visible = false;
+scene.add(exteriorFill);
 
 function setPowerState(powered) {
   lightingState.powered = Boolean(powered);
@@ -394,6 +516,10 @@ window.ZoneTripScene = {
   scene,
   camera,
   renderer,
+  views: {
+    presets: cameraPresets,
+    set: setCameraPreset,
+  },
   motion: {
     state: imu,
     requestPermission: requestOrientation,
@@ -412,6 +538,7 @@ window.ZoneTripScene = {
   },
   lighting: {
     ambient,
+    exteriorFill,
     wallSpots: wallSpotLights,
     setPowerState,
     state: lightingState,
@@ -423,15 +550,29 @@ function resize() {
   const height = window.innerHeight;
   renderer.setSize(width, height, false);
   camera.aspect = width / height;
-  camera.updateProjectionMatrix();
 
-  const mobile = width <= 620;
+  const preset = cameraPresets[cameraPreset];
+  const hasPreset = Boolean(preset);
+  const mobile = !preset && width <= 620;
   cameraBase.mobile = mobile;
-  cameraBase.position.set(0, mobile ? -0.04 : 0.18, mobile ? 7.4 : 6.1);
-  cameraBase.target.set(0, mobile ? -0.18 : -0.08, -0.78);
+  if (preset) {
+    camera.fov = preset.fov;
+    cameraBase.position.copy(preset.position);
+    cameraBase.target.copy(preset.target);
+  } else {
+    camera.fov = 42;
+    cameraBase.position.set(0, mobile ? -0.04 : 0.18, mobile ? 7.4 : 6.1);
+    cameraBase.target.set(0, mobile ? -0.18 : -0.08, -0.78);
+  }
+  camera.updateProjectionMatrix();
+  renderer.toneMappingExposure = hasPreset ? 1.9 : 1.15;
+  scene.fog.density = hasPreset ? 0.018 : 0.045;
+  ambient.intensity = hasPreset ? 0.42 : 0.18;
+  exteriorFill.visible = hasPreset;
   camera.position.copy(cameraBase.position);
   booth.scale.setScalar(mobile ? 1.04 : 1);
-  booth.position.y = mobile ? -0.04 : -0.02;
+  booth.position.y = preset ? -0.04 : mobile ? -0.04 : -0.02;
+  microphone.visible = !preset;
   microphone.scale.set(mobile ? 1.38 : 1.34, mobile ? 2.45 : 2.38, 1);
   microphone.position.y = mobile ? -0.24 : -0.34;
   microphone.position.z = mobile ? 1.22 : 1.08;
