@@ -22,6 +22,7 @@ cp -R \
   booth.html \
   styles.css \
   script.js \
+  scene.js \
   booth.js \
   booth-config.js \
   favicon.svg \
@@ -30,6 +31,7 @@ cp -R \
   bin \
   manifesto \
   assets \
+  vendor \
   deploy \
   install.sh \
   "$build_dir"/

@@ -9,22 +9,7 @@
   </head>
   <body class="image-listener-page">
     <main class="image-listener-shell" aria-label="Zone Trip listening interface">
-      <figure class="image-listener-figure" aria-label="Old-fashioned microphone on a theater stage">
-        <picture>
-          <source media="(max-width: 620px)" srcset="assets/stage-mirror-mobile.png" />
-          <img
-            src="assets/stage-mirror-desktop.png"
-            alt="Ornate mirror with swirling mist on a theater stage in front of red curtains"
-          />
-        </picture>
-        <div class="mirror-projection" aria-hidden="true"></div>
-        <img
-          class="microphone-overlay"
-          src="assets/microphone-overlay.png"
-          alt=""
-          aria-hidden="true"
-        />
-      </figure>
+      <div id="stage-scene" class="stage-scene" aria-hidden="true"></div>
 
       <section class="listener-runtime" aria-live="polite" hidden>
         <h1 id="booth-title">Zone Trip</h1>
@@ -55,6 +40,7 @@
         autoStart: true,
       };
     </script>
+    <script type="module" src="scene.js"></script>
     <script src="booth.js"></script>
   </body>
 </html>

@@ -7,11 +7,12 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-COPY index.html booth.html styles.css script.js booth.js booth-config.js favicon.svg CNAME .nojekyll ./
+COPY index.html booth.html styles.css script.js scene.js booth.js booth-config.js favicon.svg CNAME .nojekyll ./
 COPY docs ./docs
 COPY bin ./bin
 COPY manifesto ./manifesto
 COPY assets ./assets
+COPY vendor ./vendor
 
 RUN chmod 0755 /app/bin/zonetrip-serve
 

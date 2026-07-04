@@ -55,12 +55,14 @@ See `CLOUD_RUN.md`. This is intended for public static content review, not for p
 - `manifesto/` - project manifesto and deployment doctrine
 - `styles.css` - responsive visual system
 - `script.js` - content data and rendering
+- `scene.js` - Three.js rendered booth scene
 - `booth.js` - local microphone recording controls
 - `booth-config.js` - explicit world-model endpoint configuration
 - `CNAME` - GitHub Pages custom domain
 - `WORLD_MODEL.md` - boundary for derived model updates without transcript storage
 - `HARDWARE.md` - one-PC-per-booth hardware assumption
 - `assets/` - local responsive stage imagery
+- `vendor/three/` - vendored Three.js runtime module
 - `docs/` - source white paper PDF
 - `bin/zonetrip-serve` - local static server
 - `deploy/systemd/` - optional systemd unit

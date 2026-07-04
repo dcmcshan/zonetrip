@@ -46,11 +46,18 @@ body {
   margin: 0;
 }
 
-.image-listener-figure {
+.image-listener-figure,
+.stage-scene {
   position: absolute;
   inset: 0;
   margin: 0;
   background: #150806;
+}
+
+.stage-scene canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
 .image-listener-figure > picture,
