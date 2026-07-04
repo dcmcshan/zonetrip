@@ -101,7 +101,7 @@ const seamMaterial = new THREE.LineBasicMaterial({
   transparent: true,
   opacity: 0.46,
 });
-const microphoneBaseTarget = new THREE.Vector3(0, -1.34, 0.54);
+const microphoneBaseTarget = new THREE.Vector3(0, -1.34, 0.72);
 const wallSpotLights = [];
 
 function addPanel(width, height, x, y, z, rotY = 0, material = wallMaterial) {
@@ -274,10 +274,14 @@ for (const [x, y, z, rotY] of [
   addPanel(1.95, 0.72, x, y, z, rotY, wallMaterial);
 }
 
-const floor = new THREE.Mesh(new THREE.CylinderGeometry(3.45, 3.75, 0.18, 8), floorMaterial);
-floor.position.set(0, -1.42, -0.45);
-floor.scale.z = 0.78;
-booth.add(floor);
+const stageDeck = new THREE.Mesh(new THREE.CylinderGeometry(2.6, 2.95, 0.18, 8), floorMaterial);
+stageDeck.position.set(0, -1.42, 0.22);
+stageDeck.scale.z = 0.68;
+booth.add(stageDeck);
+
+const lowerFloor = new THREE.Mesh(new THREE.BoxGeometry(6.2, 0.12, 2.3), floorMaterial);
+lowerFloor.position.set(0, -1.75, 2.48);
+booth.add(lowerFloor);
 
 const stageRiserMaterial = new THREE.MeshStandardMaterial({
   color: 0x111820,
@@ -287,12 +291,12 @@ const stageRiserMaterial = new THREE.MeshStandardMaterial({
   emissiveIntensity: 0.55,
 });
 
-const stageStep = new THREE.Mesh(new THREE.BoxGeometry(5.55, 0.3, 0.42), stageRiserMaterial);
-stageStep.position.set(0, -1.55, 2.18);
+const stageStep = new THREE.Mesh(new THREE.BoxGeometry(5.4, 0.34, 0.2), stageRiserMaterial);
+stageStep.position.set(0, -1.58, 1.52);
 booth.add(stageStep);
 
-const stageApron = new THREE.Mesh(new THREE.BoxGeometry(5.9, 0.28, 0.18), trimMaterial);
-stageApron.position.set(0, -1.76, 2.48);
+const stageApron = new THREE.Mesh(new THREE.BoxGeometry(5.8, 0.24, 0.16), trimMaterial);
+stageApron.position.set(0, -1.82, 1.66);
 booth.add(stageApron);
 
 const stageLip = new THREE.Mesh(
@@ -305,7 +309,7 @@ const stageLip = new THREE.Mesh(
     metalness: 0.35,
   }),
 );
-stageLip.position.set(0, -1.34, 1.98);
+stageLip.position.set(0, -1.32, 1.4);
 booth.add(stageLip);
 
 const roof = new THREE.Mesh(
@@ -404,14 +408,14 @@ function resize() {
 
   const mobile = width <= 620;
   cameraBase.mobile = mobile;
-  cameraBase.position.set(0, mobile ? 0.46 : 0.86, mobile ? 10.7 : 8.25);
-  cameraBase.target.set(0, mobile ? 0.1 : 0.18, -1.05);
+  cameraBase.position.set(0, mobile ? -0.04 : 0.18, mobile ? 7.4 : 6.1);
+  cameraBase.target.set(0, mobile ? -0.18 : -0.08, -0.78);
   camera.position.copy(cameraBase.position);
-  booth.scale.setScalar(mobile ? 0.98 : 0.96);
-  booth.position.y = mobile ? -0.16 : -0.08;
-  microphone.scale.set(mobile ? 1.22 : 1.24, mobile ? 2.17 : 2.2, 1);
-  microphone.position.y = mobile ? -0.44 : -0.5;
-  microphone.position.z = mobile ? 0.74 : 0.62;
+  booth.scale.setScalar(mobile ? 1.04 : 1);
+  booth.position.y = mobile ? -0.04 : -0.02;
+  microphone.scale.set(mobile ? 1.38 : 1.34, mobile ? 2.45 : 2.38, 1);
+  microphone.position.y = mobile ? -0.24 : -0.34;
+  microphone.position.z = mobile ? 1.22 : 1.08;
   updateCameraFromSensors();
 }
 
