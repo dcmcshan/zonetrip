@@ -101,6 +101,8 @@ const seamMaterial = new THREE.LineBasicMaterial({
   transparent: true,
   opacity: 0.46,
 });
+const microphoneBaseTarget = new THREE.Vector3(0, -1.34, 0.54);
+const wallSpotLights = [];
 
 function addPanel(width, height, x, y, z, rotY = 0, material = wallMaterial) {
   const mesh = new THREE.Mesh(new THREE.BoxGeometry(width, height, 0.08), material);
@@ -131,10 +133,11 @@ function addLightBar(x, y, z, rotY = 0) {
   bar.position.set(x, y, z);
   bar.rotation.y = rotY;
   booth.add(bar);
-  const light = new THREE.SpotLight(0xd8e9ff, 2.7, 6.2, 0.46, 0.65, 1.4);
+  const light = new THREE.SpotLight(0xd8e9ff, 3.15, 6.8, 0.36, 0.72, 1.35);
   light.position.set(x, y - 0.04, z + 0.08);
-  light.target.position.set(x * 0.28, -1.1, -0.25);
+  light.target.position.copy(microphoneBaseTarget);
   booth.add(light, light.target);
+  wallSpotLights.push(light);
 }
 
 function clamp(value, min, max) {
@@ -328,11 +331,6 @@ scene.add(microphone);
 const ambient = new THREE.HemisphereLight(0x5f7188, 0x030407, 0.18);
 scene.add(ambient);
 
-const overhead = new THREE.SpotLight(0xc8ddff, 4.8, 9, 0.38, 0.72, 1.25);
-overhead.position.set(0, 3.15, 1.25);
-overhead.target.position.set(0, -1.28, 0);
-scene.add(overhead, overhead.target);
-
 window.ZoneTripScene = {
   scene,
   camera,
@@ -355,7 +353,7 @@ window.ZoneTripScene = {
   },
   lighting: {
     ambient,
-    overhead,
+    wallSpots: wallSpotLights,
   },
 };
 
@@ -381,7 +379,9 @@ function resize() {
 
 function animate(now = 0) {
   const t = now * 0.001;
-  overhead.intensity = 4.55 + Math.cos(t * 0.22) * 0.2;
+  for (const light of wallSpotLights) {
+    light.intensity = 3.05 + Math.cos(t * 0.22) * 0.12;
+  }
   updateCameraFromSensors();
   renderer.render(scene, camera);
   requestAnimationFrame(animate);
