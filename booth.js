@@ -1,6 +1,7 @@
 const consentCheckbox = document.querySelector("#consent-checkbox");
 const startButton = document.querySelector("#start-recording");
 const stopButton = document.querySelector("#stop-recording");
+const updateButton = document.querySelector("#update-world-model");
 const deleteButton = document.querySelector("#delete-recording");
 const stateLabel = document.querySelector("#recording-state");
 const timeLabel = document.querySelector("#recording-time");
@@ -8,7 +9,7 @@ const message = document.querySelector("#booth-message");
 const meterBar = document.querySelector("#meter-bar");
 const reviewPanel = document.querySelector(".recording-review");
 const playback = document.querySelector("#recording-playback");
-const downloadLink = document.querySelector("#download-recording");
+const boothConfig = window.ZoneTripBoothConfig || {};
 
 let mediaRecorder;
 let mediaStream;
@@ -19,6 +20,7 @@ let recordingStartedAt = 0;
 let timerInterval;
 let chunks = [];
 let recordingUrl;
+let recordingBlob;
 
 function setMessage(text) {
   message.textContent = text;
@@ -77,9 +79,10 @@ function clearRecording() {
 
   chunks = [];
   recordingUrl = undefined;
+  recordingBlob = undefined;
   playback.removeAttribute("src");
-  downloadLink.removeAttribute("href");
   reviewPanel.hidden = true;
+  updateButton.disabled = true;
   deleteButton.disabled = true;
   timeLabel.textContent = "00:00";
 }
@@ -125,13 +128,14 @@ async function startRecording() {
   });
   mediaRecorder.addEventListener("stop", () => {
     const blob = new Blob(chunks, { type: mediaRecorder.mimeType || "audio/webm" });
+    recordingBlob = blob;
     recordingUrl = URL.createObjectURL(blob);
     playback.src = recordingUrl;
-    downloadLink.href = recordingUrl;
-    downloadLink.download = `zonetrip-reflection-${new Date().toISOString()}.webm`;
     reviewPanel.hidden = false;
+    updateButton.disabled = false;
     deleteButton.disabled = false;
     setState("Stopped");
+    setMessage("Audio is held in memory. Update the world model or delete it.");
     stopStream();
     stopMeter();
   });
@@ -142,6 +146,7 @@ async function startRecording() {
   setState("Listening");
   startButton.disabled = true;
   stopButton.disabled = false;
+  updateButton.disabled = true;
   deleteButton.disabled = true;
 }
 
@@ -160,10 +165,48 @@ consentCheckbox.addEventListener("change", () => {
 
 startButton.addEventListener("click", startRecording);
 stopButton.addEventListener("click", stopRecording);
+updateButton.addEventListener("click", async () => {
+  if (!recordingBlob) {
+    return;
+  }
+
+  if (!boothConfig.worldModelEndpoint) {
+    setState("Endpoint missing");
+    setMessage("No world-model endpoint is configured for this booth.");
+    return;
+  }
+
+  updateButton.disabled = true;
+  setState("Updating");
+  setMessage("Sending ephemeral audio for derived world-model update.");
+
+  try {
+    const response = await fetch(boothConfig.worldModelEndpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": recordingBlob.type || "application/octet-stream",
+        "X-ZoneTrip-Intent": "world-model-update",
+      },
+      body: recordingBlob,
+    });
+
+    if (!response.ok) {
+      throw new Error(`World model update failed: ${response.status}`);
+    }
+
+    clearRecording();
+    setState("Updated");
+    setMessage("World model update accepted. Ephemeral audio was cleared from this browser.");
+  } catch (error) {
+    updateButton.disabled = false;
+    setState("Update failed");
+    setMessage("The world model was not updated. Delete or retry from this browser.");
+  }
+});
 deleteButton.addEventListener("click", () => {
   clearRecording();
   setState("Deleted");
-  setMessage("The current in-browser recording has been deleted.");
+  setMessage("The current in-browser audio has been deleted.");
 });
 
 if (!navigator.mediaDevices || !window.MediaRecorder) {

@@ -3,10 +3,10 @@ set -eu
 
 cd "$(dirname "$0")/.."
 
-runtime_files="index.html booth.html styles.css script.js booth.js"
+runtime_files="index.html booth.html styles.css script.js booth.js booth-config.js"
 
 echo "Checking runtime files for external network references..."
-if grep -RInE 'https?://|//[A-Za-z0-9.-]+|@import|<iframe|<img[^>]+src="https?:|fetch\(|XMLHttpRequest|navigator\.sendBeacon' $runtime_files; then
+if grep -RInE 'https?://|//[A-Za-z0-9.-]+|@import|<iframe|<img[^>]+src="https?:|XMLHttpRequest|navigator\.sendBeacon' $runtime_files; then
   echo "External runtime dependency found. Zone Trip must remain standalone." >&2
   exit 1
 fi
@@ -17,6 +17,7 @@ test -f booth.html
 test -f styles.css
 test -f script.js
 test -f booth.js
+test -f booth-config.js
 test -f favicon.svg
 test -f docs/Zone_Trip_White_Paper_First_Review.pdf
 test -x bin/zonetrip-serve

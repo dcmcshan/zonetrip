@@ -16,11 +16,13 @@ cp -R \
   .nojekyll \
   README.md \
   DEPLOY.md \
+  WORLD_MODEL.md \
   index.html \
   booth.html \
   styles.css \
   script.js \
   booth.js \
+  booth-config.js \
   favicon.svg \
   docs \
   bin \

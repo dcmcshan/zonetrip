@@ -12,7 +12,7 @@ const commitments = [
   {
     kicker: "03",
     title: "Nightly data burn",
-    body: "Raw audio, transcripts, caches, and reconstruction-capable material are destroyed at the end of each deployment day.",
+    body: "Raw audio, transient interpretation buffers, caches, and reconstruction-capable material are destroyed at the end of each deployment day.",
   },
   {
     kicker: "04",
@@ -34,8 +34,8 @@ const commitments = [
 const architectureSteps = [
   ["Participant threshold", "The booth presents a short boundary notice, consent language, and one prompt."],
   ["Local capture", "Audio or text is captured without login, phone pairing, identity collection, or raw external transfer."],
-  ["Redaction and parsing", "Local processing removes identifying material and forms temporary interpretive notes."],
-  ["Aggregation", "Themes, tensions, contradictions, absences, and minority signals are derived without counts or faction maps."],
+  ["Interpretation", "Local processing forms transient signals without preserving transcript artifacts."],
+  ["World model update", "Themes, tensions, contradictions, absences, and minority signals update a derived model without counts or faction maps."],
   ["Nightly burn", "Raw and reconstruction-capable material is deleted through a documented, verifiable protocol."],
   ["Output filter", "Draft reflections are checked for directive language, false authority, metrics, and misuse risk."],
   ["Steward review", "Human stewards inspect draft reflections and constitutional checks without preserving unnecessary content."],

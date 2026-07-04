@@ -55,6 +55,8 @@ See `CLOUD_RUN.md`. This is intended for public static content review, not for p
 - `styles.css` - responsive visual system
 - `script.js` - content data and rendering
 - `booth.js` - local microphone recording controls
+- `booth-config.js` - explicit world-model endpoint configuration
+- `WORLD_MODEL.md` - boundary for derived model updates without transcript storage
 - `docs/` - source white paper PDF
 - `bin/zonetrip-serve` - local static server
 - `deploy/systemd/` - optional systemd unit
