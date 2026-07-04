@@ -20,6 +20,23 @@ scene.fog = new THREE.FogExp2(0x060910, 0.045);
 const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 100);
 camera.position.set(0, 1.35, 8.2);
 camera.lookAt(0, 0.85, 0);
+const cameraBase = {
+  mobile: false,
+  position: new THREE.Vector3(),
+  target: new THREE.Vector3(),
+};
+const cameraTarget = new THREE.Vector3();
+
+const imu = {
+  supported: "DeviceOrientationEvent" in window,
+  permission: "requestPermission" in (window.DeviceOrientationEvent || {}),
+  enabled: false,
+  baseline: null,
+  targetYaw: 0,
+  targetPitch: 0,
+  yaw: 0,
+  pitch: 0,
+};
 
 const loader = new THREE.TextureLoader();
 
@@ -152,6 +169,86 @@ function addLightBar(x, y, z, rotY = 0) {
   light.position.set(x, y - 0.04, z + 0.08);
   light.target.position.set(x * 0.28, -1.1, -0.25);
   booth.add(light, light.target);
+}
+
+function clamp(value, min, max) {
+  return Math.max(min, Math.min(max, value));
+}
+
+function normalizeAngle(value) {
+  return ((value + 180) % 360) - 180;
+}
+
+function enableOrientation() {
+  if (imu.enabled || !imu.supported) {
+    return;
+  }
+  imu.enabled = true;
+  window.addEventListener("deviceorientation", handleOrientation, true);
+}
+
+async function requestOrientation() {
+  if (!imu.supported) {
+    return;
+  }
+
+  if (imu.permission) {
+    try {
+      const permission = await window.DeviceOrientationEvent.requestPermission();
+      if (permission !== "granted") {
+        return;
+      }
+    } catch (error) {
+      return;
+    }
+  }
+
+  enableOrientation();
+}
+
+function handleOrientation(event) {
+  if (typeof event.beta !== "number" || typeof event.gamma !== "number") {
+    return;
+  }
+
+  const sample = {
+    beta: event.beta,
+    gamma: event.gamma,
+    alpha: typeof event.alpha === "number" ? event.alpha : 0,
+  };
+
+  if (!imu.baseline) {
+    imu.baseline = sample;
+  }
+
+  const orientation = window.screen?.orientation?.angle ?? window.orientation ?? 0;
+  let yaw = normalizeAngle(sample.gamma - imu.baseline.gamma);
+  let pitch = normalizeAngle(sample.beta - imu.baseline.beta);
+
+  if (Math.abs(orientation) === 90) {
+    yaw = normalizeAngle(sample.beta - imu.baseline.beta) * (orientation > 0 ? -1 : 1);
+    pitch = normalizeAngle(sample.gamma - imu.baseline.gamma);
+  }
+
+  imu.targetYaw = clamp(yaw / 28, -1, 1);
+  imu.targetPitch = clamp(pitch / 24, -1, 1);
+}
+
+function updateCameraFromSensors() {
+  imu.yaw += (imu.targetYaw - imu.yaw) * 0.08;
+  imu.pitch += (imu.targetPitch - imu.pitch) * 0.08;
+  cameraTarget.copy(cameraBase.target);
+
+  if (cameraBase.mobile) {
+    cameraTarget.x += imu.yaw * 1.05;
+    cameraTarget.y += imu.pitch * -0.58;
+    camera.position.x = cameraBase.position.x + imu.yaw * 0.38;
+    camera.position.y = cameraBase.position.y + imu.pitch * -0.18;
+  } else {
+    camera.position.copy(cameraBase.position);
+  }
+
+  camera.lookAt(cameraTarget);
 }
 
 const rear = addPanel(3.65, 3.25, 0, 0.7, -2.7);
@@ -315,6 +412,17 @@ window.ZoneTripScene = {
   scene,
   camera,
   renderer,
+  motion: {
+    state: imu,
+    requestPermission: requestOrientation,
+    recalibrate() {
+      imu.baseline = null;
+      imu.yaw = 0;
+      imu.pitch = 0;
+      imu.targetYaw = 0;
+      imu.targetPitch = 0;
+    },
+  },
   lighting: {
     ambient,
     overhead,
@@ -333,13 +441,16 @@ function resize() {
   camera.updateProjectionMatrix();
 
   const mobile = width <= 620;
-  camera.position.set(0, mobile ? 0.9 : 1.12, mobile ? 8.9 : 7.7);
-  camera.lookAt(0, mobile ? 0.45 : 0.42, -1.0);
+  cameraBase.mobile = mobile;
+  cameraBase.position.set(0, mobile ? 0.9 : 1.12, mobile ? 8.9 : 7.7);
+  cameraBase.target.set(0, mobile ? 0.45 : 0.42, -1.0);
+  camera.position.copy(cameraBase.position);
   booth.scale.setScalar(mobile ? 1.16 : 1);
   booth.position.y = mobile ? -0.05 : 0;
   microphone.scale.set(mobile ? 1.88 : 1.4, mobile ? 3.34 : 2.48, 1);
   microphone.position.y = mobile ? -0.52 : -0.55;
   microphone.position.z = mobile ? 0.74 : 0.62;
+  updateCameraFromSensors();
 }
 
 function animate(now = 0) {
@@ -350,10 +461,16 @@ function animate(now = 0) {
   mistB.material.opacity = 0.28 + Math.cos(t * 0.53) * 0.06;
   mirrorGlow.intensity = 2 + Math.sin(t * 0.9) * 0.38;
   overhead.intensity = 4.55 + Math.cos(t * 0.22) * 0.2;
+  updateCameraFromSensors();
   renderer.render(scene, camera);
   requestAnimationFrame(animate);
 }
 
 resize();
 window.addEventListener("resize", resize);
+if (imu.supported && !imu.permission) {
+  enableOrientation();
+}
+window.addEventListener("pointerdown", requestOrientation, { once: true });
+window.addEventListener("touchstart", requestOrientation, { once: true, passive: true });
 requestAnimationFrame(animate);
