@@ -30,6 +30,7 @@ gcloud run deploy "$SERVICE" \
   --port 8080 \
   --min-instances 0 \
   --max-instances 1 \
+  --concurrency 1 \
   --cpu 4 \
   --memory 16Gi \
   --gpu 1 \
