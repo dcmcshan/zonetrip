@@ -16,6 +16,8 @@ const worldDrawerToggle = document.querySelector("#world-drawer-toggle");
 const worldModelStatus = document.querySelector("#world-model-status");
 const worldModelText = document.querySelector("#world-model-text");
 const boothConfig = window.ZoneTripBoothConfig || {};
+const idlePowerdownMs = Number(boothConfig.idlePowerdownMs || 60000);
+const vadRmsThreshold = Number(boothConfig.vadRmsThreshold || 0.018);
 
 let mediaRecorder;
 let mediaStream;
@@ -27,6 +29,13 @@ let timerInterval;
 let chunks = [];
 let recordingUrl;
 let recordingBlob;
+let idleTimer;
+let processingUpdate = false;
+let poweredDown = false;
+let lastSpeechAt = 0;
+let lastVadActivityAt = 0;
+let heardSpeech = false;
+let silenceStopPending = false;
 
 function setMessage(text) {
   if (message) {
@@ -37,6 +46,50 @@ function setMessage(text) {
 function setState(text) {
   if (stateLabel) {
     stateLabel.textContent = text;
+  }
+}
+
+function setScenePowered(powered) {
+  poweredDown = !powered;
+  if (window.ZoneTripScene?.lighting?.setPowerState) {
+    window.ZoneTripScene.lighting.setPowerState(powered);
+  }
+}
+
+function shouldHoldPower() {
+  return processingUpdate;
+}
+
+function markActive(statusText) {
+  window.clearTimeout(idleTimer);
+  if (poweredDown) {
+    setWorldModelStatus(statusText || "Simulator awake. Awaiting local STT and LLM update.");
+  }
+  setScenePowered(true);
+
+  if (!Number.isFinite(idlePowerdownMs) || idlePowerdownMs <= 0) {
+    return;
+  }
+
+  idleTimer = window.setTimeout(() => {
+    if (shouldHoldPower()) {
+      markActive();
+      return;
+    }
+
+    setScenePowered(false);
+    setWorldModelStatus("No speech detected for one minute. Cloud Run can scale to zero; lights dimmed.");
+  }, idlePowerdownMs);
+}
+
+function noteSpeechActivity() {
+  const now = Date.now();
+  lastSpeechAt = now;
+  heardSpeech = true;
+
+  if (now - lastVadActivityAt > 1000) {
+    lastVadActivityAt = now;
+    markActive();
   }
 }
 
@@ -151,10 +204,32 @@ function startMeter(stream) {
   analyser.fftSize = 256;
   source.connect(analyser);
 
-  const data = new Uint8Array(analyser.frequencyBinCount);
+  const frequencyData = new Uint8Array(analyser.frequencyBinCount);
+  const timeData = new Uint8Array(analyser.fftSize);
   const render = () => {
-    analyser.getByteFrequencyData(data);
-    const average = data.reduce((sum, value) => sum + value, 0) / data.length;
+    analyser.getByteFrequencyData(frequencyData);
+    analyser.getByteTimeDomainData(timeData);
+    const average = frequencyData.reduce((sum, value) => sum + value, 0) / frequencyData.length;
+    const rms = Math.sqrt(
+      timeData.reduce((sum, value) => {
+        const centered = (value - 128) / 128;
+        return sum + centered * centered;
+      }, 0) / timeData.length,
+    );
+
+    if (rms >= vadRmsThreshold) {
+      noteSpeechActivity();
+    } else if (
+      mediaRecorder?.state === "recording" &&
+      !silenceStopPending &&
+      idlePowerdownMs > 0 &&
+      Date.now() - lastSpeechAt >= idlePowerdownMs
+    ) {
+      silenceStopPending = true;
+      setWorldModelStatus("One minute of silence detected. Stopping capture.");
+      stopRecording();
+    }
+
     if (meterBar) {
       meterBar.style.transform = `scaleX(${Math.min(1, average / 120)})`;
     }
@@ -209,7 +284,12 @@ function recordingMimeType() {
 }
 
 async function startRecording() {
+  markActive();
   clearRecording();
+  heardSpeech = false;
+  silenceStopPending = false;
+  lastSpeechAt = Date.now();
+  lastVadActivityAt = 0;
   setMessage("");
 
   try {
@@ -246,9 +326,26 @@ async function startRecording() {
     updateButton.disabled = false;
     deleteButton.disabled = false;
     setState("Stopped");
-    setMessage("Audio is held in memory. Update the world model or delete it.");
+    setMessage(
+      heardSpeech
+        ? "Audio is held in memory. Update the world model or delete it."
+        : "No speech was detected. Audio is held only in this browser.",
+    );
     stopStream();
     stopMeter();
+    if (!heardSpeech) {
+      clearRecording();
+    }
+    if (silenceStopPending) {
+      setScenePowered(false);
+      setWorldModelStatus("No speech detected for one minute. Cloud Run can scale to zero; lights dimmed.");
+      return;
+    }
+    markActive(
+      heardSpeech
+        ? "Speech capture stopped. Awaiting model update."
+        : "No speech detected. Awaiting local STT and LLM update.",
+    );
   });
 
   mediaRecorder.start(1000);
@@ -262,6 +359,7 @@ async function startRecording() {
 }
 
 function stopRecording() {
+  markActive();
   if (mediaRecorder && mediaRecorder.state === "recording") {
     mediaRecorder.stop();
   }
@@ -271,6 +369,7 @@ function stopRecording() {
 }
 
 function enterThreshold() {
+  markActive();
   if (consentCheckbox) {
     consentCheckbox.checked = true;
   }
@@ -285,20 +384,26 @@ function enterThreshold() {
 }
 
 consentCheckbox.addEventListener("change", () => {
+  markActive();
   startButton.disabled = !consentCheckbox.checked;
 });
 
-startButton.addEventListener("click", startRecording);
+startButton.addEventListener("click", () => {
+  markActive();
+  startRecording();
+});
 if (enterThresholdButton) {
   enterThresholdButton.addEventListener("click", enterThreshold);
 }
 if (worldDrawerToggle) {
   worldDrawerToggle.addEventListener("click", () => {
+    markActive();
     setWorldDrawerOpen(worldDrawer?.dataset.open !== "true");
   });
 }
 stopButton.addEventListener("click", stopRecording);
 updateButton.addEventListener("click", async () => {
+  markActive();
   if (!recordingBlob) {
     return;
   }
@@ -312,6 +417,7 @@ updateButton.addEventListener("click", async () => {
   }
 
   updateButton.disabled = true;
+  processingUpdate = true;
   setState("Updating");
   setMessage("Sending ephemeral audio for derived world-model update.");
   setWorldModelStatus("Processing local audio into derived signals.");
@@ -341,9 +447,13 @@ updateButton.addEventListener("click", async () => {
     setMessage("The world model was not updated. Delete or retry from this browser.");
     setWorldModelStatus("The processor did not return a world-model update.");
     setWorldDrawerOpen(true);
+  } finally {
+    processingUpdate = false;
+    markActive();
   }
 });
 deleteButton.addEventListener("click", () => {
+  markActive();
   clearRecording();
   setState("Deleted");
   setMessage("The current in-browser audio has been deleted.");
@@ -363,7 +473,15 @@ if (!navigator.mediaDevices || !window.MediaRecorder) {
   });
 }
 
+for (const eventName of ["pointerdown", "keydown", "touchstart"]) {
+  window.addEventListener(eventName, markActive, { passive: true });
+}
+window.addEventListener("load", markActive);
+markActive();
+
 window.ZoneTripWorldDrawer = {
   render: renderWorldModel,
   setOpen: setWorldDrawerOpen,
+  markActive,
+  noteSpeechActivity,
 };

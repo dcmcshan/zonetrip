@@ -41,6 +41,8 @@ python3 -m venv "$PREFIX/.venv"
 cat > "$PREFIX/booth-config.js" <<'EOF'
 window.ZoneTripBoothConfig = {
   worldModelEndpoint: "http://127.0.0.1:8090/process-audio",
+  idlePowerdownMs: 60000,
+  vadRmsThreshold: 0.018,
 };
 EOF
 

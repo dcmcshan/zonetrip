@@ -68,6 +68,12 @@ ZONETRIP_AUDIO_DEVICE=hw:1,0 ./bin/zonetrip-capture-once
 
 The browser/Pages route can still simulate capture for review, but it is not the real participant interface.
 
+## Idle Simulation
+
+The browser simulator uses Web Audio RMS as lightweight VAD. `idlePowerdownMs: 60000` dims the eight overhead spots after one minute without detected speech. This is a visual cue for Cloud Run scale-to-zero review; the physical local booth does not need a visitor UI to enforce this state.
+
+The processor also uses faster-whisper with `vad_filter=True`. If Whisper produces no transcript, `/process-audio` returns `422 no speech detected` and skips the `model.md` update.
+
 ## Cloud Run Simulator
 
 Cloud Run can simulate the one-box booth PC with an L4 GPU:

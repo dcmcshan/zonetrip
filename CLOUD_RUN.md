@@ -23,6 +23,16 @@ This uses one NVIDIA L4 GPU, `min-instances=0`, and `max-instances=1`. It should
 
 The local equivalent is documented in `PROCESSOR.md`.
 
+For fidelity testing, the processor simulator keeps the LLM inside the Cloud Run container through Ollama and the same default Gemma model used by the local booth path. A managed cloud Gemma endpoint may be operationally simpler, but it is not the same runtime path.
+
+## Idle Scale-Down
+
+The processor simulator deploys with `min-instances=0`, so Cloud Run is allowed to scale it to zero when it has no active traffic. Cloud Run controls the exact drain timing; the repository does not assume an exact one-minute provider shutdown.
+
+The Pages simulator uses `idlePowerdownMs: 60000` in `booth-config.js` as a visible operational cue. Browser-side VAD estimates microphone speech energy; after one minute without detected speech, recording stops and the eight booth spotlights dim to indicate that the Cloud Run simulator can be idle or scaled down. Any interaction or renewed speech brings the lights back up.
+
+The browser VAD is deliberately lightweight. The processor still treats Whisper/faster-whisper output as the server-side authority: if the audio produces no transcript, `/process-audio` returns `422 no speech detected` and does not update `model.md`.
+
 ## Behavior
 
 - Containerized static site

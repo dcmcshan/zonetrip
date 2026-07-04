@@ -94,6 +94,7 @@ const ledMaterial = new THREE.MeshStandardMaterial({
   emissive: 0xaed8ff,
   emissiveIntensity: 4.8,
   roughness: 0.2,
+  transparent: true,
 });
 
 const seamMaterial = new THREE.LineBasicMaterial({
@@ -103,6 +104,14 @@ const seamMaterial = new THREE.LineBasicMaterial({
 });
 const microphoneBaseTarget = new THREE.Vector3(0, -1.34, 0.72);
 const wallSpotLights = [];
+const wallSpotBars = [];
+const lightingState = {
+  powered: true,
+  currentLevel: 1,
+  targetLevel: 1,
+  activeLevel: 1,
+  idleLevel: 0.16,
+};
 
 function addPanel(width, height, x, y, z, rotY = 0, material = wallMaterial) {
   const mesh = new THREE.Mesh(new THREE.BoxGeometry(width, height, 0.08), material);
@@ -133,6 +142,7 @@ function addLightBar(x, y, z, rotY = 0) {
   bar.position.set(x, y, z);
   bar.rotation.y = rotY;
   booth.add(bar);
+  wallSpotBars.push(bar);
   const light = new THREE.SpotLight(0xd8e9ff, 1.45, 6.8, 0.34, 0.72, 1.35);
   light.position.set(x, y - 0.04, z + 0.08);
   light.target.position.copy(microphoneBaseTarget);
@@ -373,6 +383,13 @@ scene.add(microphone);
 const ambient = new THREE.HemisphereLight(0x5f7188, 0x030407, 0.18);
 scene.add(ambient);
 
+function setPowerState(powered) {
+  lightingState.powered = Boolean(powered);
+  lightingState.targetLevel = lightingState.powered
+    ? lightingState.activeLevel
+    : lightingState.idleLevel;
+}
+
 window.ZoneTripScene = {
   scene,
   camera,
@@ -396,6 +413,8 @@ window.ZoneTripScene = {
   lighting: {
     ambient,
     wallSpots: wallSpotLights,
+    setPowerState,
+    state: lightingState,
   },
 };
 
@@ -421,8 +440,14 @@ function resize() {
 
 function animate(now = 0) {
   const t = now * 0.001;
+  lightingState.currentLevel += (lightingState.targetLevel - lightingState.currentLevel) * 0.045;
   for (const light of wallSpotLights) {
-    light.intensity = 1.38 + Math.cos(t * 0.22) * 0.06;
+    light.intensity = (1.38 + Math.cos(t * 0.22) * 0.06) * lightingState.currentLevel;
+  }
+  ledMaterial.emissiveIntensity = 4.8 * lightingState.currentLevel;
+  ledMaterial.opacity = 0.35 + lightingState.currentLevel * 0.65;
+  for (const bar of wallSpotBars) {
+    bar.visible = lightingState.currentLevel > 0.03;
   }
   updateCameraFromSensors();
   renderer.render(scene, camera);
