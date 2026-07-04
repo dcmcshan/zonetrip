@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Zone Trip Booth</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="booth-page">
+    <main class="booth-shell" aria-labelledby="booth-title">
+      <section class="booth-panel">
+        <p class="eyebrow">Zone Trip listening threshold</p>
+        <h1 id="booth-title">Speak to the mirror.</h1>
+        <p class="lede">
+          This is voluntary reflection. It is not a report, vote, therapy
+          session, mandate, recommendation, or representative claim.
+        </p>
+
+        <div class="boundary-notice">
+          <h2>Before you begin</h2>
+          <ul>
+            <li>Your microphone is accessed only after you press start.</li>
+            <li>This browser page keeps the recording local by default.</li>
+            <li>No upload happens from this page unless a steward adds an endpoint.</li>
+            <li>Delete removes the current in-browser recording.</li>
+          </ul>
+        </div>
+
+        <label class="consent-row">
+          <input id="consent-checkbox" type="checkbox" />
+          <span>I understand this boundary and choose to speak.</span>
+        </label>
+
+        <div class="recorder" aria-live="polite">
+          <div class="meter" aria-hidden="true">
+            <span id="meter-bar"></span>
+          </div>
+          <div class="recorder-status">
+            <span id="recording-state">Idle</span>
+            <strong id="recording-time">00:00</strong>
+          </div>
+          <div class="recorder-actions">
+            <button id="start-recording" class="button button-primary" type="button" disabled>
+              Start Listening
+            </button>
+            <button id="stop-recording" class="button" type="button" disabled>
+              Stop
+            </button>
+            <button id="delete-recording" class="button danger-button" type="button" disabled>
+              Delete
+            </button>
+          </div>
+        </div>
+
+        <div class="recording-review" hidden>
+          <h2>Local recording</h2>
+          <audio id="recording-playback" controls></audio>
+          <a id="download-recording" class="button" download>Download audio</a>
+        </div>
+
+        <p id="booth-message" class="booth-message"></p>
+      </section>
+
+      <aside class="booth-aside" aria-labelledby="prompt-title">
+        <h2 id="prompt-title">Prompt</h2>
+        <p>
+          What does this community need to see about itself that it may not yet
+          be able to hold together?
+        </p>
+        <a class="button" href="index.html">Return to project site</a>
+      </aside>
+    </main>
+
+    <script src="booth.js"></script>
+  </body>
+</html>

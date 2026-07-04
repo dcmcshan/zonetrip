@@ -51,8 +51,10 @@ See `CLOUD_RUN.md`. This is intended for public static content review, not for p
 ## Project Structure
 
 - `index.html` - project site shell and sections
+- `booth.html` - browser-based listening booth front end
 - `styles.css` - responsive visual system
 - `script.js` - content data and rendering
+- `booth.js` - local microphone recording controls
 - `docs/` - source white paper PDF
 - `bin/zonetrip-serve` - local static server
 - `deploy/systemd/` - optional systemd unit

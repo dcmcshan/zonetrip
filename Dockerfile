@@ -7,7 +7,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-COPY index.html styles.css script.js .nojekyll ./
+COPY index.html booth.html styles.css script.js booth.js .nojekyll ./
 COPY docs ./docs
 COPY bin ./bin
 

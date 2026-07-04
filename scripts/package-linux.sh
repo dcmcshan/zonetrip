@@ -17,8 +17,10 @@ cp -R \
   README.md \
   DEPLOY.md \
   index.html \
+  booth.html \
   styles.css \
   script.js \
+  booth.js \
   docs \
   bin \
   deploy \
