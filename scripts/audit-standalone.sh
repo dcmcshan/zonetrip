@@ -23,6 +23,10 @@ test -f favicon.svg
 test -f docs/Zone_Trip_White_Paper_First_Review.pdf
 test -f assets/stage-microphone-mobile.jpg
 test -f assets/stage-microphone-desktop.jpg
+test -f assets/stage-mirror-mobile.png
+test -f assets/stage-mirror-desktop.png
+test -f assets/microphone-overlay.png
+test -f assets/mirror-mask.svg
 test -x bin/zonetrip-serve
 
 echo "Standalone audit passed."
