@@ -1,138 +1,123 @@
-const plans = [
+const commitments = [
   {
-    note: "Balanced for galleries, coffee, transit, and meals.",
-    zones: [
-      {
-        label: "Zone 1",
-        name: "Union Station",
-        duration: "1h 25m",
-        stops: [
-          ["09:00", "Coffee and route check"],
-          ["09:35", "Bookstore browse"],
-          ["10:10", "Light rail transfer"],
-        ],
-      },
-      {
-        label: "Zone 2",
-        name: "RiNo",
-        duration: "2h 05m",
-        stops: [
-          ["10:30", "Mural walk"],
-          ["11:20", "Studio gallery"],
-          ["12:05", "Lunch window"],
-        ],
-      },
-      {
-        label: "Zone 3",
-        name: "Golden Triangle",
-        duration: "2h 30m",
-        stops: [
-          ["13:15", "Museum block"],
-          ["14:40", "Civic Center pause"],
-          ["15:20", "Dessert stop"],
-        ],
-      },
-      {
-        label: "Zone 4",
-        name: "South Broadway",
-        duration: "1h 10m",
-        stops: [
-          ["16:20", "Record shop"],
-          ["17:00", "Dinner shortlist"],
-          ["17:30", "Return plan"],
-        ],
-      },
-    ],
+    kicker: "01",
+    title: "Non-direction",
+    body: "The system may reflect tensions and questions, but it must not instruct, recommend, rank, or tell organizers what to do.",
   },
   {
-    note: "Shorter hops with more food stops and less museum time.",
-    zones: [
-      {
-        label: "Zone 1",
-        name: "LoDo",
-        duration: "1h 10m",
-        stops: [
-          ["10:00", "Brunch"],
-          ["10:45", "Market walk"],
-        ],
-      },
-      {
-        label: "Zone 2",
-        name: "Highland",
-        duration: "2h 15m",
-        stops: [
-          ["11:30", "Bridge crossing"],
-          ["12:05", "Patio lunch"],
-          ["13:00", "Design shops"],
-        ],
-      },
-      {
-        label: "Zone 3",
-        name: "Capitol Hill",
-        duration: "1h 55m",
-        stops: [
-          ["14:00", "Historic walk"],
-          ["14:50", "Cafe reset"],
-          ["15:30", "Transit home"],
-        ],
-      },
-    ],
+    kicker: "02",
+    title: "Local containment",
+    body: "Raw participant material remains inside the installation by default. The booth must not quietly become a data pipeline.",
+  },
+  {
+    kicker: "03",
+    title: "Nightly data burn",
+    body: "Raw audio, transcripts, caches, and reconstruction-capable material are destroyed at the end of each deployment day.",
+  },
+  {
+    kicker: "04",
+    title: "Anti-metric capture",
+    body: "No percentages, sentiment scores, dashboards, subgroup comparisons, faction labels, or claims of representativeness.",
+  },
+  {
+    kicker: "05",
+    title: "Stewardship over ownership",
+    body: "The host cannot own the mirror, alter public reflection, or use the booth as proof that the institution has listened.",
+  },
+  {
+    kicker: "06",
+    title: "Right of refusal",
+    body: "Zone Trip should not deploy where privacy, consent, deletion, non-direction, or participant comprehension cannot be maintained.",
   },
 ];
 
-const zoneList = document.querySelector("#zone-list");
-const zoneTemplate = document.querySelector("#zone-template");
-const planNote = document.querySelector("#plan-note");
-const zoneCount = document.querySelector("#zone-count");
-const stopCount = document.querySelector("#stop-count");
-const totalTime = document.querySelector("#total-time");
-const shuffleButton = document.querySelector("#shuffle-plan");
+const architectureSteps = [
+  ["Participant threshold", "The booth presents a short boundary notice, consent language, and one prompt."],
+  ["Local capture", "Audio or text is captured without login, phone pairing, identity collection, or raw external transfer."],
+  ["Redaction and parsing", "Local processing removes identifying material and forms temporary interpretive notes."],
+  ["Aggregation", "Themes, tensions, contradictions, absences, and minority signals are derived without counts or faction maps."],
+  ["Nightly burn", "Raw and reconstruction-capable material is deleted through a documented, verifiable protocol."],
+  ["Output filter", "Draft reflections are checked for directive language, false authority, metrics, and misuse risk."],
+  ["Steward review", "Human stewards inspect draft reflections and constitutional checks without preserving unnecessary content."],
+  ["Public reflection", "The final output is framed as a bounded mirror, not a vote, diagnosis, mandate, or recommendation."],
+];
 
-let currentPlan = 0;
+const gates = [
+  "The community has a plausible need for temporary shared reflection.",
+  "The host understands that Zone Trip is non-directive.",
+  "The booth can operate locally with controlled network state.",
+  "Raw material cannot leave the deployment environment.",
+  "Nightly burn and deletion verification are operationally enforceable.",
+  "Stewards can withhold output if the reflection would mislead or be misused.",
+];
 
-function minutesFromDuration(duration) {
-  const hours = Number(duration.match(/(\d+)h/)?.[1] ?? 0);
-  const minutes = Number(duration.match(/(\d+)m/)?.[1] ?? 0);
-  return hours * 60 + minutes;
-}
+const stopConditions = [
+  "The host wants metrics, recommendations, dashboards, raw data access, or evidence for funders.",
+  "Participants are unlikely to understand what the system does and does not do.",
+  "Speech could expose people to serious harm.",
+  "Existing human reflection practices would be displaced rather than supported.",
+  "The system cannot enforce deletion or local containment.",
+  "The output is likely to become a mandate, proof, faction weapon, or institutional legitimacy device.",
+];
 
-function formatMinutes(totalMinutes) {
-  const hours = Math.floor(totalMinutes / 60);
-  const minutes = totalMinutes % 60;
-  return `${hours}h ${minutes}m`;
-}
+const collaborators = [
+  "local-first technologists",
+  "privacy advisors",
+  "constitutional governance thinkers",
+  "AI engineers for constrained systems",
+  "cultural historians",
+  "Burning Man-literate researchers",
+  "spatial designers",
+  "community stewards",
+];
 
-function renderPlan(plan) {
-  zoneList.replaceChildren();
-  planNote.textContent = plan.note;
-  zoneCount.textContent = String(plan.zones.length);
+function renderCommitments() {
+  const container = document.querySelector("#commitment-list");
+  const template = document.querySelector("#card-template");
 
-  const stops = plan.zones.flatMap((zone) => zone.stops);
-  stopCount.textContent = String(stops.length);
-  totalTime.textContent = formatMinutes(
-    plan.zones.reduce((sum, zone) => sum + minutesFromDuration(zone.duration), 0),
-  );
-
-  for (const zone of plan.zones) {
-    const card = zoneTemplate.content.firstElementChild.cloneNode(true);
-    card.querySelector(".zone-card__label").textContent = zone.label;
-    card.querySelector("h3").textContent = zone.name;
-    card.querySelector(".zone-card__time").textContent = zone.duration;
-
-    const list = card.querySelector("ul");
-    for (const [time, title] of zone.stops) {
-      const item = document.createElement("li");
-      item.innerHTML = `<span class="stop-time">${time}</span><strong>${title}</strong>`;
-      list.append(item);
-    }
-
-    zoneList.append(card);
+  for (const commitment of commitments) {
+    const card = template.content.firstElementChild.cloneNode(true);
+    card.querySelector(".card-kicker").textContent = commitment.kicker;
+    card.querySelector("h3").textContent = commitment.title;
+    card.querySelector("p:last-child").textContent = commitment.body;
+    container.append(card);
   }
 }
 
-shuffleButton.addEventListener("click", () => {
-  currentPlan = (currentPlan + 1) % plans.length;
-  renderPlan(plans[currentPlan]);
-});
+function renderTimeline() {
+  const container = document.querySelector("#architecture-steps");
 
-renderPlan(plans[currentPlan]);
+  for (const [title, body] of architectureSteps) {
+    const item = document.createElement("li");
+    const label = document.createElement("strong");
+    label.textContent = title;
+    item.append(label, body);
+    container.append(item);
+  }
+}
+
+function renderList(selector, items) {
+  const container = document.querySelector(selector);
+
+  for (const text of items) {
+    const item = document.createElement("li");
+    item.textContent = text;
+    container.append(item);
+  }
+}
+
+function renderCollaborators() {
+  const container = document.querySelector("#collaborator-list");
+
+  for (const collaborator of collaborators) {
+    const item = document.createElement("span");
+    item.textContent = collaborator;
+    container.append(item);
+  }
+}
+
+renderCommitments();
+renderTimeline();
+renderList("#gate-list", gates);
+renderList("#stop-list", stopConditions);
+renderCollaborators();
