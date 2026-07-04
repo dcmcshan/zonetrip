@@ -8,7 +8,7 @@ The front page is the participant interface. The manifesto route presents the pr
 
 ## Live Site
 
-https://zonetrip.castalia.institute/
+https://castaliainstitute.github.io/zonetrip/
 
 ## Source Document
 
@@ -57,7 +57,6 @@ See `CLOUD_RUN.md`. This is intended for public static content review, not for p
 - `script.js` - content data and rendering
 - `booth.js` - local microphone recording controls
 - `booth-config.js` - explicit world-model endpoint configuration
-- `CNAME` - GitHub Pages custom domain
 - `WORLD_MODEL.md` - boundary for derived model updates without transcript storage
 - `assets/` - local responsive stage imagery
 - `docs/` - source white paper PDF
