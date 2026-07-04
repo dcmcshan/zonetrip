@@ -1,0 +1,57 @@
+#!/usr/bin/env python3
+"""Serve the Zone Trip static site from a local directory.
+
+This server is intentionally small and boring: no analytics, no remote calls,
+no framework, and no write path. It exists for local Linux deployments where a
+reverse proxy or systemd service should expose a static, self-contained site.
+"""
+
+from __future__ import annotations
+
+import argparse
+from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
+from pathlib import Path
+import os
+
+
+class StaticHandler(SimpleHTTPRequestHandler):
+    extensions_map = {
+        **SimpleHTTPRequestHandler.extensions_map,
+        ".js": "application/javascript",
+        ".css": "text/css",
+        ".pdf": "application/pdf",
+    }
+
+    def end_headers(self) -> None:
+        self.send_header("X-Content-Type-Options", "nosniff")
+        self.send_header("Referrer-Policy", "no-referrer")
+        self.send_header("Cache-Control", "no-store")
+        super().end_headers()
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Serve the Zone Trip static site.")
+    parser.add_argument("--host", default=os.environ.get("ZONETRIP_HOST", "127.0.0.1"))
+    parser.add_argument("--port", type=int, default=int(os.environ.get("ZONETRIP_PORT", "8080")))
+    parser.add_argument(
+        "--root",
+        default=os.environ.get("ZONETRIP_ROOT", str(Path(__file__).resolve().parents[1])),
+        help="Directory containing index.html.",
+    )
+    args = parser.parse_args()
+
+    root = Path(args.root).resolve()
+    if not (root / "index.html").is_file():
+        raise SystemExit(f"index.html not found in {root}")
+
+    os.chdir(root)
+    server = ThreadingHTTPServer((args.host, args.port), StaticHandler)
+    print(f"Zone Trip serving {root} at http://{args.host}:{args.port}/", flush=True)
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:
+        print("\nZone Trip server stopped.", flush=True)
+
+
+if __name__ == "__main__":
+    main()

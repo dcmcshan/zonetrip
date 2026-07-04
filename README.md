@@ -21,10 +21,22 @@ The reviewed PDF is included at:
 This project has no build step. Open `index.html` in a browser, or serve the folder:
 
 ```sh
-python3 -m http.server 5173
+./bin/zonetrip-serve --host 127.0.0.1 --port 5173 --root .
 ```
 
 Then open <http://localhost:5173>.
+
+## Standalone Linux Deployment
+
+Zone Trip is structured as a standalone static site with no external runtime assets, no analytics, no API calls, and no cloud dependency.
+
+Build a Linux deployment archive:
+
+```sh
+./scripts/package-linux.sh
+```
+
+See `DEPLOY.md` for systemd installation and manual run instructions.
 
 ## Project Structure
 
@@ -32,6 +44,9 @@ Then open <http://localhost:5173>.
 - `styles.css` - responsive visual system
 - `script.js` - content data and rendering
 - `docs/` - source white paper PDF
+- `bin/zonetrip-serve` - local static server
+- `deploy/systemd/` - optional systemd unit
+- `scripts/` - standalone audit and Linux package scripts
 
 ## Product Direction
 

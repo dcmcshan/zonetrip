@@ -1,0 +1,23 @@
+[Unit]
+Description=Zone Trip standalone static site
+After=network.target
+
+[Service]
+Type=simple
+User=zonetrip
+Group=zonetrip
+WorkingDirectory=/opt/zonetrip
+Environment=ZONETRIP_HOST=127.0.0.1
+Environment=ZONETRIP_PORT=8080
+Environment=ZONETRIP_ROOT=/opt/zonetrip
+ExecStart=/opt/zonetrip/bin/zonetrip-serve
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=
+
+[Install]
+WantedBy=multi-user.target
