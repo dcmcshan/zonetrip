@@ -14,6 +14,7 @@ OLLAMA_URL = os.getenv("OLLAMA_URL", "http://127.0.0.1:11434")
 OLLAMA_MODEL = os.getenv("ZONETRIP_OLLAMA_MODEL", "gemma3:12b")
 WHISPER_MODEL = os.getenv("ZONETRIP_WHISPER_MODEL", "base")
 PROCESSOR_TOKEN = os.getenv("ZONETRIP_PROCESSOR_TOKEN", "")
+ENABLE_DEV_STT = os.getenv("ZONETRIP_ENABLE_DEV_STT", "0") == "1"
 LOAD_MODELS_ON_STARTUP = os.getenv("ZONETRIP_PRELOAD_MODELS", "0") == "1"
 MODEL_PATH = Path(os.getenv("ZONETRIP_MODEL_PATH", "model.md"))
 CHARTER_PATH = Path(os.getenv("ZONETRIP_CHARTER_PATH", "charter.md"))
@@ -386,6 +387,10 @@ def bounded_markdown(value: Any, payload: dict[str, Any], transcript: str) -> st
       item = scrub_transcript_copy(item, transcript, section_key)
       scrubbed_lines.append(f"{prefix}- {item}")
       continue
+    if section_key and stripped:
+      prefix = line[: len(line) - len(line.lstrip())]
+      scrubbed_lines.append(f"{prefix}{scrub_transcript_copy(stripped, transcript, section_key)}")
+      continue
     scrubbed_lines.append(line)
   text = "\n".join(scrubbed_lines)
   text = re.sub(r"\n{3,}", "\n\n", text).strip()
@@ -454,6 +459,7 @@ def health() -> dict[str, str]:
     "whisper_model": WHISPER_MODEL,
     "model_path": str(MODEL_PATH),
     "charter_path": str(CHARTER_PATH),
+    "dev_stt": "enabled" if ENABLE_DEV_STT else "disabled",
   }
 
 
@@ -463,6 +469,8 @@ def process_stt(
   x_zonetrip_token: str | None = Header(default=None),
 ) -> DerivedSignals:
   require_token(x_zonetrip_token)
+  if not ENABLE_DEV_STT:
+    raise HTTPException(status_code=404, detail="development STT input is disabled")
   return ollama_generate(request.transcript)
 
 

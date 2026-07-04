@@ -21,7 +21,12 @@ Default local endpoints:
 
 - `GET http://127.0.0.1:8090/health`
 - `POST http://127.0.0.1:8090/process-audio`
+
+Development-only endpoint:
+
 - `POST http://127.0.0.1:8090/process-stt`
+
+`/process-stt` is disabled unless `ZONETRIP_ENABLE_DEV_STT=1` is set.
 
 ## Install On The Booth PC
 
@@ -51,6 +56,12 @@ Override the model before installing:
 ```sh
 sudo ZONETRIP_OLLAMA_MODEL=gemma3:4b ./scripts/install-local-ai.sh
 ```
+
+By default the installed browser simulator is nearly identical to GitHub Pages:
+it shows the same booth scene, starts with the same threshold, listens through
+the microphone path, and keeps the text drawer hidden. The only default
+difference is that local install points `worldModelEndpoint` at the localhost
+processor.
 
 ## Capture From The Booth Microphone
 
@@ -100,7 +111,8 @@ curl -X POST http://127.0.0.1:8090/process-audio \
   --data-binary @sample.webm
 ```
 
-Existing STT text:
+Existing STT text, after starting the processor with
+`ZONETRIP_ENABLE_DEV_STT=1`:
 
 ```sh
 curl -X POST http://127.0.0.1:8090/process-stt \
@@ -110,7 +122,13 @@ curl -X POST http://127.0.0.1:8090/process-stt \
 
 ## Development Text Input
 
-The installed local simulator enables a drawer text form for development:
+The installed local simulator can enable a drawer text form for development:
+
+```sh
+sudo ZONETRIP_ENABLE_DEV_TEXT=1 ./scripts/install-local-ai.sh
+```
+
+That opt-in writes this local browser configuration:
 
 ```js
 window.ZoneTripBoothConfig = {
@@ -120,7 +138,13 @@ window.ZoneTripBoothConfig = {
 };
 ```
 
-That form is only a developer shortcut for testing the STT-output side of the loop. It posts text to `/process-stt`, renders the returned `model_markdown`, and clears the textarea after a successful update. The real booth remains microphone-only.
+The installer also writes `/etc/default/zonetrip-processor` with
+`ZONETRIP_ENABLE_DEV_STT=1`, so the API and browser shortcut are enabled
+together. Without that opt-in, `/process-stt` returns 404 and the drawer form
+stays hidden. The form is only a developer shortcut for testing the STT-output
+side of the loop. It posts text to `/process-stt`, renders the returned
+`model_markdown`, and clears the textarea after a successful update. The real
+booth remains microphone-only.
 
 Response fields are limited to constitutionally allowed derived signals:
 

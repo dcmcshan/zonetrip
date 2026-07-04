@@ -18,6 +18,7 @@ Environment=ZONETRIP_WHISPER_COMPUTE_TYPE=auto
 Environment=ZONETRIP_MODEL_PATH=/var/lib/zonetrip/model.md
 Environment=ZONETRIP_CHARTER_PATH=/opt/zonetrip/charter.md
 Environment=ZONETRIP_PULL_MODELS=0
+EnvironmentFile=-/etc/default/zonetrip-processor
 ExecStart=/bin/sh -c '/opt/zonetrip/.venv/bin/uvicorn app:app --host "$ZONETRIP_PROCESSOR_HOST" --port "$PORT"'
 Restart=on-failure
 RestartSec=5

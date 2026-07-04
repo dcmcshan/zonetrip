@@ -5,6 +5,7 @@ PREFIX="${PREFIX:-/opt/zonetrip}"
 SERVICE_USER="${SERVICE_USER:-zonetrip}"
 OLLAMA_MODEL="${ZONETRIP_OLLAMA_MODEL:-gemma3:12b}"
 STATE_DIR="${ZONETRIP_STATE_DIR:-/var/lib/zonetrip}"
+DEV_TEXT_INPUT="${ZONETRIP_ENABLE_DEV_TEXT:-0}"
 
 if [ "$(id -u)" -ne 0 ]; then
   echo "install-local-ai.sh must be run as root" >&2
@@ -38,11 +39,19 @@ python3 -m venv "$PREFIX/.venv"
 "$PREFIX/.venv/bin/python" -m pip install --upgrade pip
 "$PREFIX/.venv/bin/python" -m pip install -r "$PREFIX/services/processor/requirements.txt"
 
-cat > "$PREFIX/booth-config.js" <<'EOF'
+if [ "$DEV_TEXT_INPUT" = "1" ]; then
+  TEXT_MODEL_ENDPOINT="http://127.0.0.1:8090/process-stt"
+  DEV_TEXT_INPUT_JS="true"
+else
+  TEXT_MODEL_ENDPOINT=""
+  DEV_TEXT_INPUT_JS="false"
+fi
+
+cat > "$PREFIX/booth-config.js" <<EOF
 window.ZoneTripBoothConfig = {
   worldModelEndpoint: "http://127.0.0.1:8090/process-audio",
-  textModelEndpoint: "http://127.0.0.1:8090/process-stt",
-  devTextInput: true,
+  textModelEndpoint: "$TEXT_MODEL_ENDPOINT",
+  devTextInput: $DEV_TEXT_INPUT_JS,
   idlePowerdownMs: 60000,
   vadRmsThreshold: 0.018,
 };
@@ -58,10 +67,13 @@ chown -R "$SERVICE_USER:$SERVICE_USER" "$PREFIX" "$STATE_DIR"
 
 if command -v systemctl >/dev/null 2>&1; then
   cp "$PREFIX/deploy/systemd/zonetrip-processor.service" /etc/systemd/system/zonetrip-processor.service
+  if [ -d /etc/default ]; then
+    printf 'ZONETRIP_ENABLE_DEV_STT=%s\n' "$DEV_TEXT_INPUT" > /etc/default/zonetrip-processor
+  fi
   systemctl daemon-reload
   systemctl enable zonetrip-processor.service
   systemctl restart zonetrip-processor.service
   echo "Zone Trip processor installed at http://127.0.0.1:8090/"
 else
-  echo "Run: cd $PREFIX/services/processor && $PREFIX/.venv/bin/uvicorn app:app --host 127.0.0.1 --port 8090"
+  echo "Run: cd $PREFIX/services/processor && ZONETRIP_ENABLE_DEV_STT=$DEV_TEXT_INPUT $PREFIX/.venv/bin/uvicorn app:app --host 127.0.0.1 --port 8090"
 fi

@@ -76,6 +76,34 @@ def test_model_markdown_sanitization() -> None:
   )
 
 
+def test_model_markdown_prose_sanitization() -> None:
+  transcript = "A named committee should be blamed because the river road failed again."
+  payload = {
+    "model_markdown": (
+      "# Zone Trip World Model\n\n"
+      "## Tensions\n\n"
+      "A named committee should be blamed because the river road failed again."
+    )
+  }
+  result = app.normalize_result(transcript, payload)
+  assert_no_hits(result.model_markdown, ["named committee", "river road", "failed again"])
+
+
+def test_dev_stt_disabled_by_default() -> None:
+  original = app.ENABLE_DEV_STT
+  app.ENABLE_DEV_STT = False
+  try:
+    try:
+      app.process_stt(app.SttRequest(transcript="temporary development input"))
+    except app.HTTPException as error:
+      if error.status_code != 404:
+        raise AssertionError(f"expected 404, got {error.status_code}") from error
+    else:
+      raise AssertionError("process_stt should be unavailable by default")
+  finally:
+    app.ENABLE_DEV_STT = original
+
+
 def test_fallback_model_has_no_metadata() -> None:
   generated = app.bounded_markdown(
     "",
@@ -94,6 +122,8 @@ def test_fallback_model_has_no_metadata() -> None:
 def main() -> None:
   test_audio_suffixes()
   test_model_markdown_sanitization()
+  test_model_markdown_prose_sanitization()
+  test_dev_stt_disabled_by_default()
   test_fallback_model_has_no_metadata()
   print("processor-contract-tests-ok")
 

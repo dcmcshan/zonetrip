@@ -4,7 +4,7 @@ Zone Trip is a browser-based listening interface backed by the working white pap
 
 **Zone Trip: A Non-Directive Local AI Mirror for Community Self-Understanding**
 
-The front page simulates the physical installation for review. The real booth is a microphone connected to one Linux box running capture, Whisper, Ollama, and the processor locally. The manifesto route presents the project's core question, constitutional limits, local-first architecture, deployment gates, and collaborator needs.
+The front page simulates the physical installation for review. The real booth is a microphone connected to one Linux box running capture, Whisper, Ollama, and the processor locally. Pages and local install use the same front end by default; local install only adds the localhost audio endpoint. The manifesto route presents the project's core question, constitutional limits, local-first architecture, deployment gates, and collaborator needs.
 
 ## Live Site
 
