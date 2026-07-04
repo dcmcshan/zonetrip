@@ -6,6 +6,10 @@ Zone Trip is a project site for the working white paper:
 
 The site presents the project's core question, constitutional limits, local-first architecture, deployment gates, and collaborator needs.
 
+## Live Site
+
+https://dcmcshan.github.io/zonetrip/
+
 ## Source Document
 
 The reviewed PDF is included at:
