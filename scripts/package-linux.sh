@@ -17,6 +17,7 @@ cp -R \
   README.md \
   DEPLOY.md \
   WORLD_MODEL.md \
+  HARDWARE.md \
   index.html \
   booth.html \
   styles.css \

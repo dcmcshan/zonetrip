@@ -22,6 +22,7 @@ test -f booth-config.js
 test -f favicon.svg
 test -f CNAME
 grep -qx 'zonetrip.castalia.institute' CNAME
+test -f HARDWARE.md
 test -f docs/Zone_Trip_White_Paper_First_Review.pdf
 test -f assets/stage-microphone-mobile.jpg
 test -f assets/stage-microphone-desktop.jpg
