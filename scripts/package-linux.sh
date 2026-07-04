@@ -26,6 +26,7 @@ cp -R \
   favicon.svg \
   docs \
   bin \
+  manifesto \
   deploy \
   install.sh \
   "$build_dir"/

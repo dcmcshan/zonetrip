@@ -1,10 +1,10 @@
 # Zone Trip
 
-Zone Trip is a project site for the working white paper:
+Zone Trip is a browser-based listening interface backed by the working white paper:
 
 **Zone Trip: A Non-Directive Local AI Mirror for Community Self-Understanding**
 
-The site presents the project's core question, constitutional limits, local-first architecture, deployment gates, and collaborator needs.
+The front page is the participant interface. The manifesto route presents the project's core question, constitutional limits, local-first architecture, deployment gates, and collaborator needs.
 
 ## Live Site
 
@@ -50,8 +50,9 @@ See `CLOUD_RUN.md`. This is intended for public static content review, not for p
 
 ## Project Structure
 
-- `index.html` - project site shell and sections
-- `booth.html` - browser-based listening booth front end
+- `index.html` - browser-based listening interface
+- `booth.html` - compatibility route for the listening interface
+- `manifesto/` - project manifesto and deployment doctrine
 - `styles.css` - responsive visual system
 - `script.js` - content data and rendering
 - `booth.js` - local microphone recording controls

@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Zone Trip Manifesto</title>
+    <link rel="icon" href="../favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="../styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="../" aria-label="Zone Trip home">Zone Trip</a>
+      <nav aria-label="Primary navigation">
+        <a href="../">Listen</a>
+        <a href="#commitments">Commitments</a>
+        <a href="#architecture">Architecture</a>
+        <a href="#deployment">Deployment</a>
+        <a href="../docs/Zone_Trip_White_Paper_First_Review.pdf">White paper</a>
+      </nav>
+    </header>
+
+    <main id="top">
+      <section class="hero-section" aria-labelledby="page-title">
+        <div class="hero-copy">
+          <p class="eyebrow">Working white paper | July 2026</p>
+          <h1 id="page-title">A local AI mirror for community self-understanding.</h1>
+          <p class="lede">
+            Zone Trip is a non-directive civic reflection system. It helps a
+            community encounter its own expressed tensions, contradictions,
+            absences, and questions without turning reflection into governance,
+            surveillance, polling, therapy, or behavioral direction.
+          </p>
+          <div class="actions">
+            <a class="button button-primary" href="../docs/Zone_Trip_White_Paper_First_Review.pdf">
+              Read the white paper
+            </a>
+            <a class="button" href="../">Open listening interface</a>
+            <a class="button" href="#deployment">Review deployment gates</a>
+          </div>
+        </div>
+
+        <figure class="podium-figure" aria-label="Lectern with an old-fashioned microphone">
+          <div class="stage-light"></div>
+          <div class="microphone">
+            <span class="mic-head"></span>
+            <span class="mic-band"></span>
+            <span class="mic-stem"></span>
+          </div>
+          <div class="podium">
+            <span class="podium-badge">ZT</span>
+          </div>
+          <figcaption>
+            Speak locally. Reflect collectively. Burn raw material nightly.
+          </figcaption>
+        </figure>
+      </section>
+
+      <section class="core-question" aria-label="Core question">
+        <p>Core question</p>
+        <h2>
+          Can a community be helped to see itself without that act of reflection
+          becoming a way to direct its behavior?
+        </h2>
+      </section>
+
+      <section id="commitments" class="section-grid" aria-labelledby="commitments-title">
+        <div class="section-intro">
+          <p class="eyebrow">Constitutional limits</p>
+          <h2 id="commitments-title">The mirror must be weaker than the community.</h2>
+          <p>
+            The white paper frames usefulness as a risk. Zone Trip should refuse
+            dashboards, rankings, recommendations, faction maps, retained raw
+            datasets, and any host request that turns reflection into leverage.
+          </p>
+        </div>
+        <div id="commitment-list" class="card-grid"></div>
+      </section>
+
+      <section id="architecture" class="architecture" aria-labelledby="architecture-title">
+        <div class="section-intro">
+          <p class="eyebrow">Contained system</p>
+          <h2 id="architecture-title">A narrow local data path.</h2>
+          <p>
+            The system is designed around local capture, transient
+            interpretation, derived world-model updates, constitutional
+            filtering, human steward review, and final public reflection.
+          </p>
+        </div>
+        <ol id="architecture-steps" class="timeline"></ol>
+      </section>
+
+      <section id="deployment" class="deployment" aria-labelledby="deployment-title">
+        <div class="section-intro">
+          <p class="eyebrow">Refusal criteria</p>
+          <h2 id="deployment-title">Some communities should not have Zone Trip.</h2>
+          <p>
+            Deployment is justified only where ordinary reflection is dispersed,
+            obscured, or hard to hold collectively, and only where safeguards can
+            be maintained without compromise.
+          </p>
+        </div>
+        <div class="review-panel">
+          <div>
+            <h3>Deployment gates</h3>
+            <ul id="gate-list" class="check-list"></ul>
+          </div>
+          <div>
+            <h3>Stop conditions</h3>
+            <ul id="stop-list" class="check-list danger"></ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="reflection" aria-labelledby="reflection-title">
+        <p class="eyebrow">Public output boundary</p>
+        <h2 id="reflection-title">This is a reflection, not an answer.</h2>
+        <blockquote>
+          This reflection is drawn from voluntary participant material. It is not
+          a vote, survey, representative claim, diagnosis, mandate, or
+          recommendation. It is offered as a mirror. Raw participant material has
+          not been retained.
+        </blockquote>
+      </section>
+
+      <section class="collaborators" aria-labelledby="collaborators-title">
+        <div class="section-intro">
+          <p class="eyebrow">Collaborator needs</p>
+          <h2 id="collaborators-title">Build systems that do less, not more.</h2>
+        </div>
+        <div id="collaborator-list" class="pill-list"></div>
+      </section>
+    </main>
+
+    <footer>
+      <p>Prepared from “Zone Trip: A Non-Directive Local AI Mirror for Community Self-Understanding.”</p>
+      <a href="../docs/Zone_Trip_White_Paper_First_Review.pdf">Download PDF</a>
+    </footer>
+
+    <template id="card-template">
+      <article class="info-card">
+        <p class="card-kicker"></p>
+        <h3></h3>
+        <p></p>
+      </article>
+    </template>
+
+    <script src="../script.js"></script>
+  </body>
+</html>

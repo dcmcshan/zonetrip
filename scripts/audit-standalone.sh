@@ -3,7 +3,7 @@ set -eu
 
 cd "$(dirname "$0")/.."
 
-runtime_files="index.html booth.html styles.css script.js booth.js booth-config.js"
+runtime_files="index.html booth.html manifesto/index.html styles.css script.js booth.js booth-config.js"
 
 echo "Checking runtime files for external network references..."
 if grep -RInE 'https?://|//[A-Za-z0-9.-]+|@import|<iframe|<img[^>]+src="https?:|XMLHttpRequest|navigator\.sendBeacon' $runtime_files; then
@@ -14,6 +14,7 @@ fi
 echo "Checking required local files..."
 test -f index.html
 test -f booth.html
+test -f manifesto/index.html
 test -f styles.css
 test -f script.js
 test -f booth.js
