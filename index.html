@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ZoneTrip</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="overview" aria-labelledby="trip-title">
+        <nav class="topbar" aria-label="Primary">
+          <strong>ZoneTrip</strong>
+          <button id="shuffle-plan" type="button">Refresh Plan</button>
+        </nav>
+
+        <div class="hero">
+          <p class="eyebrow">Weekend itinerary</p>
+          <h1 id="trip-title">Denver Arts Loop</h1>
+          <p>
+            A compact route planner for grouped neighborhoods, realistic pacing,
+            and quick decisions while traveling.
+          </p>
+        </div>
+
+        <dl class="metrics" aria-label="Trip summary">
+          <div>
+            <dt>Zones</dt>
+            <dd id="zone-count">4</dd>
+          </div>
+          <div>
+            <dt>Stops</dt>
+            <dd id="stop-count">12</dd>
+          </div>
+          <div>
+            <dt>Total time</dt>
+            <dd id="total-time">7h 10m</dd>
+          </div>
+        </dl>
+      </section>
+
+      <section class="planner" aria-label="Itinerary planner">
+        <div class="section-heading">
+          <h2>Today</h2>
+          <p id="plan-note">Balanced for galleries, coffee, transit, and meals.</p>
+        </div>
+
+        <div id="zone-list" class="zone-list"></div>
+      </section>
+    </main>
+
+    <template id="zone-template">
+      <article class="zone-card">
+        <div class="zone-card__header">
+          <div>
+            <p class="zone-card__label"></p>
+            <h3></h3>
+          </div>
+          <span class="zone-card__time"></span>
+        </div>
+        <ul></ul>
+      </article>
+    </template>
+
+    <script src="script.js"></script>
+  </body>
+</html>
