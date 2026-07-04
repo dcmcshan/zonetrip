@@ -447,8 +447,8 @@ function resize() {
   camera.position.copy(cameraBase.position);
   booth.scale.setScalar(mobile ? 1.16 : 1);
   booth.position.y = mobile ? -0.05 : 0;
-  microphone.scale.set(mobile ? 1.88 : 1.4, mobile ? 3.34 : 2.48, 1);
-  microphone.position.y = mobile ? -0.52 : -0.55;
+  microphone.scale.set(mobile ? 1.58 : 1.4, mobile ? 2.81 : 2.48, 1);
+  microphone.position.y = mobile ? -0.28 : -0.55;
   microphone.position.z = mobile ? 0.74 : 0.62;
   updateCameraFromSensors();
 }
