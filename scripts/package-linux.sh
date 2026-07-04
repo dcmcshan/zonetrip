@@ -24,6 +24,7 @@ cp -R \
   booth.js \
   booth-config.js \
   favicon.svg \
+  CNAME \
   docs \
   bin \
   manifesto \
