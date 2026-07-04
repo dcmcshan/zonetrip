@@ -23,11 +23,15 @@ let recordingUrl;
 let recordingBlob;
 
 function setMessage(text) {
-  message.textContent = text;
+  if (message) {
+    message.textContent = text;
+  }
 }
 
 function setState(text) {
-  stateLabel.textContent = text;
+  if (stateLabel) {
+    stateLabel.textContent = text;
+  }
 }
 
 function formatElapsed(seconds) {
@@ -39,7 +43,9 @@ function formatElapsed(seconds) {
 function startTimer() {
   recordingStartedAt = Date.now();
   timerInterval = window.setInterval(() => {
-    timeLabel.textContent = formatElapsed((Date.now() - recordingStartedAt) / 1000);
+    if (timeLabel) {
+      timeLabel.textContent = formatElapsed((Date.now() - recordingStartedAt) / 1000);
+    }
   }, 250);
 }
 
@@ -58,7 +64,9 @@ function startMeter(stream) {
   const render = () => {
     analyser.getByteFrequencyData(data);
     const average = data.reduce((sum, value) => sum + value, 0) / data.length;
-    meterBar.style.transform = `scaleX(${Math.min(1, average / 120)})`;
+    if (meterBar) {
+      meterBar.style.transform = `scaleX(${Math.min(1, average / 120)})`;
+    }
     meterAnimation = requestAnimationFrame(render);
   };
   render();
@@ -66,7 +74,9 @@ function startMeter(stream) {
 
 function stopMeter() {
   cancelAnimationFrame(meterAnimation);
-  meterBar.style.transform = "scaleX(0)";
+  if (meterBar) {
+    meterBar.style.transform = "scaleX(0)";
+  }
   if (audioContext) {
     audioContext.close();
   }
@@ -80,11 +90,17 @@ function clearRecording() {
   chunks = [];
   recordingUrl = undefined;
   recordingBlob = undefined;
-  playback.removeAttribute("src");
-  reviewPanel.hidden = true;
+  if (playback) {
+    playback.removeAttribute("src");
+  }
+  if (reviewPanel) {
+    reviewPanel.hidden = true;
+  }
   updateButton.disabled = true;
   deleteButton.disabled = true;
-  timeLabel.textContent = "00:00";
+  if (timeLabel) {
+    timeLabel.textContent = "00:00";
+  }
 }
 
 function stopStream() {
@@ -130,8 +146,12 @@ async function startRecording() {
     const blob = new Blob(chunks, { type: mediaRecorder.mimeType || "audio/webm" });
     recordingBlob = blob;
     recordingUrl = URL.createObjectURL(blob);
-    playback.src = recordingUrl;
-    reviewPanel.hidden = false;
+    if (playback) {
+      playback.src = recordingUrl;
+    }
+    if (reviewPanel) {
+      reviewPanel.hidden = false;
+    }
     updateButton.disabled = false;
     deleteButton.disabled = false;
     setState("Stopped");
@@ -213,4 +233,9 @@ if (!navigator.mediaDevices || !window.MediaRecorder) {
   setState("Unsupported browser");
   setMessage("This browser does not support local audio recording.");
   consentCheckbox.disabled = true;
+} else if (boothConfig.autoStart) {
+  window.addEventListener("load", () => {
+    startButton.disabled = true;
+    startRecording();
+  });
 }

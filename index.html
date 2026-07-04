@@ -7,97 +7,47 @@
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="styles.css" />
   </head>
-  <body class="booth-page">
-    <header class="site-header interface-header">
-      <a class="brand" href="./" aria-label="Zone Trip home">Zone Trip</a>
-      <nav aria-label="Primary navigation">
-        <a href="manifesto/">Manifesto</a>
-        <a href="docs/Zone_Trip_White_Paper_First_Review.pdf">White paper</a>
-      </nav>
-    </header>
+  <body class="image-listener-page">
+    <main class="image-listener-shell" aria-label="Zone Trip listening interface">
+      <figure class="image-listener-figure" aria-label="Old-fashioned microphone on a theater stage">
+        <picture>
+          <source media="(max-width: 620px)" srcset="assets/stage-microphone-mobile.jpg" />
+          <img
+            src="assets/stage-microphone-desktop.jpg"
+            alt="Old-fashioned gold microphone on a theater stage in front of red curtains"
+          />
+        </picture>
+      </figure>
 
-    <main class="interface-shell" aria-labelledby="booth-title">
-      <section class="booth-panel">
-        <p class="eyebrow">Zone Trip listening threshold</p>
-        <h1 id="booth-title">Speak to the mirror.</h1>
-        <p class="lede">
-          This is voluntary reflection. It is not a report, vote, therapy
-          session, mandate, recommendation, or representative claim.
-        </p>
-
-        <div class="boundary-notice">
-          <h2>Before you begin</h2>
-          <ul>
-            <li>Your microphone is accessed only after you press start.</li>
-            <li>No transcript is shown, downloaded, or saved by this page.</li>
-            <li>Audio stays in memory until it updates the world model or is deleted.</li>
-            <li>No upload happens unless a steward configures a world-model endpoint.</li>
-            <li>Delete removes the current in-browser audio from memory.</li>
-          </ul>
-        </div>
-
-        <label class="consent-row">
-          <input id="consent-checkbox" type="checkbox" />
-          <span>I understand this boundary and choose to speak.</span>
+      <section class="listener-runtime" aria-live="polite" hidden>
+        <h1 id="booth-title">Zone Trip</h1>
+        <label>
+          <input id="consent-checkbox" type="checkbox" checked />
+          Listening
         </label>
-
-        <div class="recorder" aria-live="polite">
-          <div class="meter" aria-hidden="true">
-            <span id="meter-bar"></span>
-          </div>
-          <div class="recorder-status">
-            <span id="recording-state">Idle</span>
-            <strong id="recording-time">00:00</strong>
-          </div>
-          <div class="recorder-actions">
-            <button id="start-recording" class="button button-primary" type="button" disabled>
-              Start Listening
-            </button>
-            <button id="stop-recording" class="button" type="button" disabled>
-              Stop
-            </button>
-            <button id="update-world-model" class="button" type="button" disabled>
-              Update World Model
-            </button>
-            <button id="delete-recording" class="button danger-button" type="button" disabled>
-              Delete
-            </button>
-          </div>
+        <div class="meter" aria-hidden="true">
+          <span id="meter-bar"></span>
         </div>
-
+        <span id="recording-state">Idle</span>
+        <strong id="recording-time">00:00</strong>
+        <button id="start-recording" type="button">Start</button>
+        <button id="stop-recording" type="button" disabled>Stop</button>
+        <button id="update-world-model" type="button" disabled>Update</button>
+        <button id="delete-recording" type="button" disabled>Delete</button>
         <div class="recording-review" hidden>
-          <h2>Ephemeral audio</h2>
           <audio id="recording-playback" controls></audio>
-          <p>
-            This audio is held only in this browser memory. Update the world
-            model or delete it.
-          </p>
         </div>
-
-        <p id="booth-message" class="booth-message"></p>
+        <p id="booth-message"></p>
       </section>
-
-      <aside class="interface-stage" aria-labelledby="prompt-title">
-        <figure class="podium-figure image-figure" aria-label="Lectern with an old-fashioned microphone">
-          <picture>
-            <source media="(max-width: 620px)" srcset="assets/stage-microphone-mobile.jpg" />
-            <img
-              src="assets/stage-microphone-desktop.jpg"
-              alt="Old-fashioned gold microphone on a theater stage in front of red curtains"
-            />
-          </picture>
-        </figure>
-        <div class="prompt-panel">
-          <h2 id="prompt-title">Prompt</h2>
-          <p>
-            What does this community need to see about itself that it may not
-            yet be able to hold together?
-          </p>
-        </div>
-      </aside>
     </main>
 
     <script src="booth-config.js"></script>
+    <script>
+      window.ZoneTripBoothConfig = {
+        ...window.ZoneTripBoothConfig,
+        autoStart: true,
+      };
+    </script>
     <script src="booth.js"></script>
   </body>
 </html>
