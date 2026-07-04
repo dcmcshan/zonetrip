@@ -17,6 +17,7 @@ test -f booth.html
 test -f styles.css
 test -f script.js
 test -f booth.js
+test -f favicon.svg
 test -f docs/Zone_Trip_White_Paper_First_Review.pdf
 test -x bin/zonetrip-serve
 

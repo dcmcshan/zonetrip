@@ -21,6 +21,7 @@ cp -R \
   styles.css \
   script.js \
   booth.js \
+  favicon.svg \
   docs \
   bin \
   deploy \
