@@ -8,7 +8,7 @@ The site presents the project's core question, constitutional limits, local-firs
 
 ## Live Site
 
-https://dcmcshan.github.io/zonetrip/
+https://castaliainstitute.github.io/zonetrip/
 
 ## Source Document
 
