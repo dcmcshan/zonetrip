@@ -133,7 +133,7 @@ function addLightBar(x, y, z, rotY = 0) {
   bar.position.set(x, y, z);
   bar.rotation.y = rotY;
   booth.add(bar);
-  const light = new THREE.SpotLight(0xd8e9ff, 3.15, 6.8, 0.36, 0.72, 1.35);
+  const light = new THREE.SpotLight(0xd8e9ff, 1.45, 6.8, 0.34, 0.72, 1.35);
   light.position.set(x, y - 0.04, z + 0.08);
   light.target.position.copy(microphoneBaseTarget);
   booth.add(light, light.target);
@@ -279,6 +279,35 @@ floor.position.set(0, -1.42, -0.45);
 floor.scale.z = 0.78;
 booth.add(floor);
 
+const stageRiserMaterial = new THREE.MeshStandardMaterial({
+  color: 0x111820,
+  roughness: 0.58,
+  metalness: 0.22,
+  emissive: 0x03060a,
+  emissiveIntensity: 0.55,
+});
+
+const stageStep = new THREE.Mesh(new THREE.BoxGeometry(5.55, 0.3, 0.42), stageRiserMaterial);
+stageStep.position.set(0, -1.55, 2.18);
+booth.add(stageStep);
+
+const stageApron = new THREE.Mesh(new THREE.BoxGeometry(5.9, 0.28, 0.18), trimMaterial);
+stageApron.position.set(0, -1.76, 2.48);
+booth.add(stageApron);
+
+const stageLip = new THREE.Mesh(
+  new THREE.BoxGeometry(5.35, 0.025, 0.035),
+  new THREE.MeshStandardMaterial({
+    color: 0x93a1b2,
+    emissive: 0x233247,
+    emissiveIntensity: 0.42,
+    roughness: 0.38,
+    metalness: 0.35,
+  }),
+);
+stageLip.position.set(0, -1.34, 1.98);
+booth.add(stageLip);
+
 const roof = new THREE.Mesh(
   new THREE.CylinderGeometry(2.7, 3.35, 0.58, 8),
   new THREE.MeshStandardMaterial({
@@ -314,9 +343,18 @@ for (const seam of [
   addSeam(...seam);
 }
 
-addLightBar(-1.95, 2.08, -1.42, -0.48);
-addLightBar(0, 2.28, -2.42, 0);
-addLightBar(1.95, 2.08, -1.42, 0.48);
+for (const spot of [
+  [0, 2.28, -2.42, 0],
+  [-1.32, 2.22, -2.42, -0.28],
+  [1.32, 2.22, -2.42, 0.28],
+  [-2.28, 2.1, -1.72, -0.62],
+  [2.28, 2.1, -1.72, 0.62],
+  [-2.92, 1.96, -0.6, -0.28],
+  [2.92, 1.96, -0.6, 0.28],
+  [0, 1.92, 0.42, 0],
+]) {
+  addLightBar(...spot);
+}
 
 const micMaterial = new THREE.MeshBasicMaterial({
   map: microphoneTexture,
@@ -380,7 +418,7 @@ function resize() {
 function animate(now = 0) {
   const t = now * 0.001;
   for (const light of wallSpotLights) {
-    light.intensity = 3.05 + Math.cos(t * 0.22) * 0.12;
+    light.intensity = 1.38 + Math.cos(t * 0.22) * 0.06;
   }
   updateCameraFromSensors();
   renderer.render(scene, camera);
