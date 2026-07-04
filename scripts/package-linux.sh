@@ -43,6 +43,7 @@ cp -R \
   "$build_dir"/
 
 chmod 0755 "$build_dir/bin/zonetrip-serve" "$build_dir/bin/zonetrip-capture-once" "$build_dir/install.sh" "$build_dir/scripts/install-local-ai.sh" "$build_dir/scripts/deploy-cloud-run-processor.sh" "$build_dir/scripts/deploy-cloud-run.sh" "$build_dir/scripts/package-linux.sh" "$build_dir/scripts/audit-standalone.sh"
+chmod 0755 "$build_dir/scripts/test-processor-contract.py"
 
 tar -C dist -czf "dist/$name-$version.tar.gz" "$name-$version"
 

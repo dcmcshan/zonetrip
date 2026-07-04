@@ -135,3 +135,16 @@ Response fields are limited to constitutionally allowed derived signals:
 - `model_markdown`
 
 `model_markdown` is the complete current derived `model.md`. It is generated under `charter.md` and must not contain transcript text.
+
+## Contract Regression Test
+
+Run the local processor contract checks with a Python environment that has
+`services/processor/requirements.txt` installed:
+
+```sh
+python scripts/test-processor-contract.py
+```
+
+The test covers audio content-type handling, model Markdown normalization, raw
+transcript scrubbing, subgroup-term scrubbing, and timestamp-free fallback
+generation.
