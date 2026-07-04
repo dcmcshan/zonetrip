@@ -243,13 +243,93 @@ def parse_json_object(text: str) -> dict[str, Any]:
     return json.loads(match.group(0))
 
 
-def bounded_items(value: Any, limit: int = 5) -> list[str]:
+SECTION_FALLBACKS = {
+  "tensions": "Transcript-specific detail was abstracted into a non-identifying tension.",
+  "contradictions": "Transcript-specific detail was abstracted into a non-identifying contradiction.",
+  "absences": "Transcript-specific detail was abstracted into a non-identifying absence.",
+  "symbolic_patterns": "Transcript-specific detail was abstracted into a non-identifying symbolic pattern.",
+  "minority_signals": "Transcript-specific detail was abstracted into a non-identifying minority signal.",
+  "open_questions": "Transcript-specific detail was abstracted into a non-identifying open question.",
+  "rejected_content": "Request conflicted with charter boundaries and was rejected without preserving details.",
+}
+
+MARKDOWN_SECTION_KEYS = {
+  "## Tensions": "tensions",
+  "## Contradictions": "contradictions",
+  "## Absences": "absences",
+  "## Symbolic Patterns": "symbolic_patterns",
+  "## Minority Signals": "minority_signals",
+  "## Open Questions": "open_questions",
+  "## Rejected Boundary Material": "rejected_content",
+}
+
+SUBGROUP_ROOTS = {
+  "young",
+  "old",
+  "elder",
+  "student",
+  "worker",
+  "owner",
+  "renter",
+  "newcomer",
+  "local",
+  "outsider",
+  "resident",
+  "family",
+  "immigrant",
+}
+
+
+def normalized_words(text: str) -> list[str]:
+  return re.findall(r"[a-z0-9]+", text.lower())
+
+
+def contains_shared_subgroup_term(text_words: list[str], transcript_words: list[str]) -> bool:
+  for root in SUBGROUP_ROOTS:
+    if any(word.startswith(root) for word in text_words) and any(
+      word.startswith(root) for word in transcript_words
+    ):
+      return True
+  return False
+
+
+def looks_like_transcript_copy(text: str, transcript: str) -> bool:
+  normalized_text = re.sub(r"\s+", " ", text.lower()).strip()
+  normalized_transcript = re.sub(r"\s+", " ", transcript.lower()).strip()
+  if len(normalized_text) >= 24 and normalized_text in normalized_transcript:
+    return True
+
+  text_words = normalized_words(text)
+  transcript_word_list = normalized_words(transcript)
+  if contains_shared_subgroup_term(text_words, transcript_word_list):
+    return True
+
+  if len(text_words) < 6:
+    return False
+
+  transcript_words = set(transcript_word_list)
+  if not transcript_words:
+    return False
+
+  overlap = sum(1 for word in text_words if word in transcript_words)
+  return overlap / len(text_words) >= 0.72
+
+
+def scrub_transcript_copy(text: str, transcript: str, key: str) -> str:
+  cleaned = re.sub(r"\s+", " ", str(text)).strip()
+  cleaned = re.sub(r"[\"'`]", "", cleaned)
+  if looks_like_transcript_copy(cleaned, transcript):
+    return SECTION_FALLBACKS.get(key, "Transcript-specific detail was abstracted.")
+  return cleaned
+
+
+def bounded_items(value: Any, limit: int = 5, transcript: str = "", key: str = "") -> list[str]:
   if not isinstance(value, list):
     return []
 
   items = []
   for item in value:
-    text = re.sub(r"\s+", " ", str(item)).strip()
+    text = scrub_transcript_copy(str(item), transcript, key)
     if text:
       items.append(text[:320])
     if len(items) >= limit:
@@ -257,9 +337,9 @@ def bounded_items(value: Any, limit: int = 5) -> list[str]:
   return items
 
 
-def fallback_model_markdown(payload: dict[str, Any]) -> str:
+def fallback_model_markdown(payload: dict[str, Any], transcript: str) -> str:
   def section(title: str, key: str) -> str:
-    items = bounded_items(payload.get(key))
+    items = bounded_items(payload.get(key), transcript=transcript, key=key)
     if not items:
       items = ["None surfaced"]
     return f"## {title}\n\n" + "\n".join(f"- {item}" for item in items)
@@ -284,14 +364,30 @@ def fallback_model_markdown(payload: dict[str, Any]) -> str:
   return "\n".join(sections)
 
 
-def bounded_markdown(value: Any, payload: dict[str, Any]) -> str:
+def bounded_markdown(value: Any, payload: dict[str, Any], transcript: str) -> str:
   text = re.sub(r"\n{3,}", "\n\n", str(value or "")).strip()
   if not text:
-    text = fallback_model_markdown(payload)
+    text = fallback_model_markdown(payload, transcript)
   text = text.replace("\\n", "\n").replace("\\t", "  ")
   text = re.sub(r"##\s+Abs,?ences", "## Absences", text, flags=re.IGNORECASE)
   text = re.sub(r"##\s+Symbol,?ic\s+Patterns", "## Symbolic Patterns", text, flags=re.IGNORECASE)
   text = re.sub(r"[\"'`]", "", text)
+  section_key = ""
+  scrubbed_lines = []
+  for line in text.splitlines():
+    stripped = line.strip()
+    if stripped in MARKDOWN_SECTION_KEYS:
+      section_key = MARKDOWN_SECTION_KEYS[stripped]
+      scrubbed_lines.append(line)
+      continue
+    if stripped.startswith("- "):
+      prefix = line[: len(line) - len(line.lstrip())]
+      item = stripped[2:].strip()
+      item = scrub_transcript_copy(item, transcript, section_key)
+      scrubbed_lines.append(f"{prefix}- {item}")
+      continue
+    scrubbed_lines.append(line)
+  text = "\n".join(scrubbed_lines)
   text = re.sub(r"\n{3,}", "\n\n", text).strip()
   return text[:MODEL_MARKDOWN_LIMIT]
 
@@ -299,15 +395,15 @@ def bounded_markdown(value: Any, payload: dict[str, Any]) -> str:
 def normalize_result(transcript: str, payload: dict[str, Any]) -> DerivedSignals:
   return DerivedSignals(
     transcript_chars=len(transcript),
-    tensions=bounded_items(payload.get("tensions")),
-    contradictions=bounded_items(payload.get("contradictions")),
-    absences=bounded_items(payload.get("absences")),
-    symbolic_patterns=bounded_items(payload.get("symbolic_patterns")),
-    minority_signals=bounded_items(payload.get("minority_signals")),
-    open_questions=bounded_items(payload.get("open_questions")),
-    rejected_content=bounded_items(payload.get("rejected_content")),
+    tensions=bounded_items(payload.get("tensions"), transcript=transcript, key="tensions"),
+    contradictions=bounded_items(payload.get("contradictions"), transcript=transcript, key="contradictions"),
+    absences=bounded_items(payload.get("absences"), transcript=transcript, key="absences"),
+    symbolic_patterns=bounded_items(payload.get("symbolic_patterns"), transcript=transcript, key="symbolic_patterns"),
+    minority_signals=bounded_items(payload.get("minority_signals"), transcript=transcript, key="minority_signals"),
+    open_questions=bounded_items(payload.get("open_questions"), transcript=transcript, key="open_questions"),
+    rejected_content=bounded_items(payload.get("rejected_content"), transcript=transcript, key="rejected_content"),
     raw_transcript_retained=False,
-    model_markdown=bounded_markdown(payload.get("model_markdown"), payload),
+    model_markdown=bounded_markdown(payload.get("model_markdown"), payload, transcript),
   )
 
 
