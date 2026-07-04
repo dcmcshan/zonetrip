@@ -38,6 +38,18 @@ const imu = {
   pitch: 0,
 };
 
+const touchView = {
+  activePointerId: null,
+  startX: 0,
+  startY: 0,
+  startYaw: 0,
+  startPitch: 0,
+  targetYaw: 0,
+  targetPitch: 0,
+  yaw: 0,
+  pitch: 0,
+};
+
 const loader = new THREE.TextureLoader();
 
 function loadTexture(path) {
@@ -188,16 +200,55 @@ function handleOrientation(event) {
   imu.targetPitch = clamp(pitch / 24, -1, 1);
 }
 
+function startTouchPan(event) {
+  if (!cameraBase.mobile || touchView.activePointerId !== null) {
+    return;
+  }
+
+  touchView.activePointerId = event.pointerId;
+  touchView.startX = event.clientX;
+  touchView.startY = event.clientY;
+  touchView.startYaw = touchView.targetYaw;
+  touchView.startPitch = touchView.targetPitch;
+  renderer.domElement.setPointerCapture(event.pointerId);
+}
+
+function moveTouchPan(event) {
+  if (touchView.activePointerId !== event.pointerId) {
+    return;
+  }
+
+  const dx = event.clientX - touchView.startX;
+  const dy = event.clientY - touchView.startY;
+  touchView.targetYaw = clamp(touchView.startYaw + dx / 150, -1.15, 1.15);
+  touchView.targetPitch = clamp(touchView.startPitch + dy / 180, -1, 1);
+}
+
+function endTouchPan(event) {
+  if (touchView.activePointerId !== event.pointerId) {
+    return;
+  }
+
+  touchView.activePointerId = null;
+  if (renderer.domElement.hasPointerCapture(event.pointerId)) {
+    renderer.domElement.releasePointerCapture(event.pointerId);
+  }
+}
+
 function updateCameraFromSensors() {
   imu.yaw += (imu.targetYaw - imu.yaw) * 0.08;
   imu.pitch += (imu.targetPitch - imu.pitch) * 0.08;
+  touchView.yaw += (touchView.targetYaw - touchView.yaw) * 0.16;
+  touchView.pitch += (touchView.targetPitch - touchView.pitch) * 0.16;
+  const yaw = clamp(imu.yaw + touchView.yaw, -1.25, 1.25);
+  const pitch = clamp(imu.pitch + touchView.pitch, -1.1, 1.1);
   cameraTarget.copy(cameraBase.target);
 
   if (cameraBase.mobile) {
-    cameraTarget.x += imu.yaw * 1.05;
-    cameraTarget.y += imu.pitch * -0.58;
-    camera.position.x = cameraBase.position.x + imu.yaw * 0.38;
-    camera.position.y = cameraBase.position.y + imu.pitch * -0.18;
+    cameraTarget.x += yaw * 1.05;
+    cameraTarget.y += pitch * -0.58;
+    camera.position.x = cameraBase.position.x + yaw * 0.38;
+    camera.position.y = cameraBase.position.y + pitch * -0.18;
   } else {
     camera.position.copy(cameraBase.position);
   }
@@ -295,7 +346,12 @@ window.ZoneTripScene = {
       imu.pitch = 0;
       imu.targetYaw = 0;
       imu.targetPitch = 0;
+      touchView.yaw = 0;
+      touchView.pitch = 0;
+      touchView.targetYaw = 0;
+      touchView.targetPitch = 0;
     },
+    touch: touchView,
   },
   lighting: {
     ambient,
@@ -338,4 +394,8 @@ if (imu.supported && !imu.permission) {
 }
 window.addEventListener("pointerdown", requestOrientation, { once: true });
 window.addEventListener("touchstart", requestOrientation, { once: true, passive: true });
+renderer.domElement.addEventListener("pointerdown", startTouchPan);
+renderer.domElement.addEventListener("pointermove", moveTouchPan);
+renderer.domElement.addEventListener("pointerup", endTouchPan);
+renderer.domElement.addEventListener("pointercancel", endTouchPan);
 requestAnimationFrame(animate);
