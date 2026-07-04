@@ -33,6 +33,7 @@ cp -R \
   docs \
   bin \
   manifesto \
+  architecture \
   assets \
   vendor \
   services \

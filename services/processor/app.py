@@ -2,7 +2,6 @@ import json
 import os
 import re
 import tempfile
-from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -50,6 +49,19 @@ class AudioProcessResponse(DerivedSignals):
 def require_token(token: str | None) -> None:
   if PROCESSOR_TOKEN and token != PROCESSOR_TOKEN:
     raise HTTPException(status_code=401, detail="invalid processor token")
+
+
+def audio_suffix(content_type: str) -> str:
+  normalized = content_type.lower()
+  if "mp4" in normalized or "m4a" in normalized:
+    return ".mp4"
+  if "wav" in normalized or "wave" in normalized or "x-wav" in normalized:
+    return ".wav"
+  if "mpeg" in normalized or "mp3" in normalized:
+    return ".mp3"
+  if "ogg" in normalized:
+    return ".ogg"
+  return ".webm"
 
 
 def load_whisper_model():
@@ -195,6 +207,11 @@ Rules:
 - Set raw_transcript_retained to false.
 - model_markdown is the complete next contents of model.md.
 - model_markdown must not include the transcript or quote any participant speech.
+- Abstract concrete transcript specifics into pattern language.
+- Do not preserve names of events, institutions, places, groups, people, or distinctive source nouns from the transcript.
+- Do not put transcript-derived words or phrases in quotation marks.
+- Do not include preface text, charter restatement, metadata, timestamps, rankings, counts, or explanatory boilerplate in model_markdown.
+- If a section has no durable signal, write exactly: - None surfaced
 - model_markdown must stay concise and use these Markdown sections:
   # Zone Trip World Model
   ## Tensions
@@ -247,11 +264,8 @@ def fallback_model_markdown(payload: dict[str, Any]) -> str:
       items = ["None surfaced"]
     return f"## {title}\n\n" + "\n".join(f"- {item}" for item in items)
 
-  generated_at = datetime.now(timezone.utc).replace(microsecond=0).isoformat()
   sections = [
     "# Zone Trip World Model",
-    "",
-    f"Last derived update: {generated_at}",
     "",
     section("Tensions", "tensions"),
     "",
@@ -274,6 +288,11 @@ def bounded_markdown(value: Any, payload: dict[str, Any]) -> str:
   text = re.sub(r"\n{3,}", "\n\n", str(value or "")).strip()
   if not text:
     text = fallback_model_markdown(payload)
+  text = text.replace("\\n", "\n").replace("\\t", "  ")
+  text = re.sub(r"##\s+Abs,?ences", "## Absences", text, flags=re.IGNORECASE)
+  text = re.sub(r"##\s+Symbol,?ic\s+Patterns", "## Symbolic Patterns", text, flags=re.IGNORECASE)
+  text = re.sub(r"[\"'`]", "", text)
+  text = re.sub(r"\n{3,}", "\n\n", text).strip()
   return text[:MODEL_MARKDOWN_LIMIT]
 
 
@@ -358,7 +377,7 @@ async def process_audio(
 ) -> AudioProcessResponse:
   require_token(x_zonetrip_token)
   content_type = request.headers.get("content-type", "audio/webm")
-  suffix = ".mp4" if "mp4" in content_type else ".webm"
+  suffix = audio_suffix(content_type)
   body = await request.body()
   if not body:
     raise HTTPException(status_code=400, detail="empty audio body")

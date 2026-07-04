@@ -15,9 +15,13 @@ const worldDrawer = document.querySelector("#world-drawer");
 const worldDrawerToggle = document.querySelector("#world-drawer-toggle");
 const worldModelStatus = document.querySelector("#world-model-status");
 const worldModelText = document.querySelector("#world-model-text");
+const devTextForm = document.querySelector("#dev-text-input");
+const devTextArea = document.querySelector("#dev-transcript-input");
+const devTextSubmit = document.querySelector("#dev-transcript-submit");
 const boothConfig = window.ZoneTripBoothConfig || {};
 const idlePowerdownMs = Number(boothConfig.idlePowerdownMs || 60000);
 const vadRmsThreshold = Number(boothConfig.vadRmsThreshold || 0.018);
+const textModelEndpoint = boothConfig.textModelEndpoint || "";
 
 let mediaRecorder;
 let mediaStream;
@@ -176,6 +180,14 @@ function renderWorldModel(payload) {
   setWorldModelStatus("Updated from local STT and LLM derived signals.");
   worldModelText.textContent = lines.join("\n");
   setWorldDrawerOpen(true);
+}
+
+function configureDevTextInput() {
+  if (!devTextForm) {
+    return;
+  }
+
+  devTextForm.hidden = !(boothConfig.devTextInput && textModelEndpoint);
 }
 
 function formatElapsed(seconds) {
@@ -401,6 +413,57 @@ if (worldDrawerToggle) {
     setWorldDrawerOpen(worldDrawer?.dataset.open !== "true");
   });
 }
+if (devTextForm) {
+  devTextForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    markActive();
+
+    const transcript = devTextArea?.value.trim() || "";
+    if (!transcript || !textModelEndpoint) {
+      return;
+    }
+
+    if (devTextSubmit) {
+      devTextSubmit.disabled = true;
+    }
+    processingUpdate = true;
+    setState("Updating");
+    setWorldModelStatus("Processing development text into derived signals.");
+
+    try {
+      const response = await fetch(textModelEndpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-ZoneTrip-Intent": "world-model-update",
+        },
+        body: JSON.stringify({ transcript }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`World model text update failed: ${response.status}`);
+      }
+
+      const payload = await response.json().catch(() => null);
+      if (devTextArea) {
+        devTextArea.value = "";
+      }
+      renderWorldModel(payload);
+      setState("Updated");
+      setMessage("Development text was processed and cleared from this browser.");
+    } catch (error) {
+      setState("Update failed");
+      setWorldModelStatus("The processor did not return a text world-model update.");
+      setWorldDrawerOpen(true);
+    } finally {
+      processingUpdate = false;
+      if (devTextSubmit) {
+        devTextSubmit.disabled = false;
+      }
+      markActive();
+    }
+  });
+}
 stopButton.addEventListener("click", stopRecording);
 updateButton.addEventListener("click", async () => {
   markActive();
@@ -476,6 +539,7 @@ if (!navigator.mediaDevices || !window.MediaRecorder) {
 for (const eventName of ["pointerdown", "keydown", "touchstart"]) {
   window.addEventListener(eventName, markActive, { passive: true });
 }
+configureDevTextInput();
 window.addEventListener("load", markActive);
 markActive();
 

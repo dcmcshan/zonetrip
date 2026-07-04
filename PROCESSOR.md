@@ -108,6 +108,20 @@ curl -X POST http://127.0.0.1:8090/process-stt \
   -d '{"transcript":"I feel the community is changing, but I am not sure what we are losing."}'
 ```
 
+## Development Text Input
+
+The installed local simulator enables a drawer text form for development:
+
+```js
+window.ZoneTripBoothConfig = {
+  worldModelEndpoint: "http://127.0.0.1:8090/process-audio",
+  textModelEndpoint: "http://127.0.0.1:8090/process-stt",
+  devTextInput: true,
+};
+```
+
+That form is only a developer shortcut for testing the STT-output side of the loop. It posts text to `/process-stt`, renders the returned `model_markdown`, and clears the textarea after a successful update. The real booth remains microphone-only.
+
 Response fields are limited to constitutionally allowed derived signals:
 
 - `tensions`

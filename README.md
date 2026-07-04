@@ -59,6 +59,7 @@ See `CLOUD_RUN.md`. This is intended for public static content review, not for p
 - `index.html` - browser-based installation simulator
 - `booth.html` - compatibility route for the simulator
 - `manifesto/` - project manifesto and deployment doctrine
+- `architecture/` - runtime architecture and processing-loop documentation
 - `styles.css` - responsive visual system
 - `script.js` - content data and rendering
 - `scene.js` - Three.js rendered booth scene

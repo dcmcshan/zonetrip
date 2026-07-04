@@ -49,6 +49,17 @@
           <h2 id="world-drawer-title">World Model</h2>
           <p id="world-model-status">Awaiting local STT and LLM update.</p>
           <pre id="world-model-text">No derived model yet.</pre>
+          <form class="dev-text-input" id="dev-text-input" hidden>
+            <label for="dev-transcript-input">Development text input</label>
+            <textarea
+              id="dev-transcript-input"
+              name="transcript"
+              rows="4"
+              autocomplete="off"
+              spellcheck="true"
+            ></textarea>
+            <button id="dev-transcript-submit" type="submit">Update Model</button>
+          </form>
         </div>
       </section>
 

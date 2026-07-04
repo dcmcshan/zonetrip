@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Zone Trip Architecture</title>
+    <link rel="icon" href="../favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="../styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="../" aria-label="Zone Trip home">Zone Trip</a>
+      <nav aria-label="Primary navigation">
+        <a href="../">Simulator</a>
+        <a href="../manifesto/">Manifesto</a>
+        <a href="../docs/Zone_Trip_White_Paper_First_Review.pdf">White paper</a>
+      </nav>
+    </header>
+
+    <main id="top">
+      <section class="architecture-page-hero" aria-labelledby="architecture-title">
+        <p class="eyebrow">System architecture</p>
+        <h1 id="architecture-title">One microphone, one local model boundary, one derived world model.</h1>
+        <p class="lede">
+          Zone Trip separates the real booth from the browser simulation. The
+          real installation is a microphone connected to one Linux box. The
+          public Pages front end is a review surface that simulates the booth,
+          world-model drawer, silence timeout, and optional development text
+          input.
+        </p>
+      </section>
+
+      <section class="architecture-map" aria-labelledby="runtime-title">
+        <div class="section-intro">
+          <p class="eyebrow">Runtime boundaries</p>
+          <h2 id="runtime-title">Three deployments, one contract.</h2>
+          <p>
+            The same constitutional processor contract is used across the local
+            booth, Pages simulator, and Cloud Run simulator. Only the local
+            booth is the charter-compliant participant-material runtime.
+          </p>
+        </div>
+
+        <div class="architecture-columns">
+          <article class="info-card">
+            <p class="card-kicker">Real booth</p>
+            <h3>Local Linux box</h3>
+            <p>
+              Microphone capture, Whisper STT, Ollama Gemma, processor service,
+              and durable <code>model.md</code> state run on one machine inside
+              the booth boundary.
+            </p>
+          </article>
+
+          <article class="info-card">
+            <p class="card-kicker">Review surface</p>
+            <h3>GitHub Pages</h3>
+            <p>
+              The browser renders the Three.js booth, VAD-based silence cue,
+              world-model drawer, and optional development text input. It is a
+              simulator, not the physical participant interface.
+            </p>
+          </article>
+
+          <article class="info-card">
+            <p class="card-kicker">Sizing simulator</p>
+            <h3>Cloud Run GPU</h3>
+            <p>
+              Cloud Run uses an L4 GPU, <code>min-instances=0</code>, and the
+              same in-container Ollama/Gemma path for fidelity testing against
+              equivalent local hardware.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section class="architecture" aria-labelledby="loop-title">
+        <div class="section-intro">
+          <p class="eyebrow">Processing loop</p>
+          <h2 id="loop-title">STT feeds the model, but transcript does not survive.</h2>
+        </div>
+
+        <ol class="timeline architecture-timeline">
+          <li>
+            <h3>Capture</h3>
+            <p>Audio enters from the booth microphone or simulator browser.</p>
+          </li>
+          <li>
+            <h3>Transcribe</h3>
+            <p>Whisper receives temporary audio and returns request-local STT.</p>
+          </li>
+          <li>
+            <h3>Constrain</h3>
+            <p>The processor reads immutable <code>charter.md</code> and current <code>model.md</code>.</p>
+          </li>
+          <li>
+            <h3>Generate</h3>
+            <p>The LLM returns derived signals plus a complete replacement <code>model.md</code>.</p>
+          </li>
+          <li>
+            <h3>Persist</h3>
+            <p>The processor atomically writes only the derived world model.</p>
+          </li>
+          <li>
+            <h3>Discard</h3>
+            <p>Temporary audio and transcript buffers die with the request.</p>
+          </li>
+        </ol>
+      </section>
+
+      <section class="section-grid" aria-labelledby="state-title">
+        <div class="section-intro">
+          <p class="eyebrow">Durable state</p>
+          <h2 id="state-title">Only <code>model.md</code> survives.</h2>
+          <p>
+            The model file is not source material. It should contain abstracted
+            tensions, contradictions, absences, symbolic patterns, minority
+            signals, open questions, and rejected boundary material.
+          </p>
+        </div>
+
+        <div class="review-panel">
+          <div>
+            <h3>Allowed</h3>
+            <ul class="check-list">
+              <li>Derived signals</li>
+              <li>Uncertainty and contradiction</li>
+              <li>Absences and minority signals</li>
+              <li>Rejected boundary categories</li>
+            </ul>
+          </div>
+          <div>
+            <h3>Forbidden</h3>
+            <ul class="check-list danger">
+              <li>Raw transcript or quotes</li>
+              <li>Names, factions, subgroup maps, or identity exposure</li>
+              <li>Rankings, counts, scores, or representational claims</li>
+              <li>Recommendations, mandates, diagnoses, or governance action</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="architecture-map" aria-labelledby="idle-title">
+        <div class="section-intro">
+          <p class="eyebrow">Silence and scale-to-zero</p>
+          <h2 id="idle-title">No speech is no work.</h2>
+          <p>
+            The browser simulator uses lightweight Web Audio RMS VAD. One
+            minute without detected speech stops capture and dims the eight
+            overhead lights. Cloud Run is deployed with
+            <code>min-instances=0</code>; the visual dimming is a cue that the
+            processor simulator can be idle or scaled to zero.
+          </p>
+        </div>
+      </section>
+
+      <section class="architecture-map" aria-labelledby="dev-title">
+        <div class="section-intro">
+          <p class="eyebrow">Development path</p>
+          <h2 id="dev-title">Text input is for developers only.</h2>
+          <p>
+            Local installs can enable a drawer text form that posts to
+            <code>/process-stt</code>. It exists to test the STT-output side of
+            the loop without recording audio. The physical booth remains
+            microphone-only.
+          </p>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <p>Architecture companion to the Zone Trip white paper and processor contract.</p>
+      <a href="../docs/Zone_Trip_White_Paper_First_Review.pdf">White paper</a>
+    </footer>
+  </body>
+</html>

@@ -221,6 +221,58 @@ body {
   line-height: 1.52;
 }
 
+.dev-text-input {
+  display: grid;
+  gap: 0.65rem;
+  margin-top: 1rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid rgba(164, 184, 207, 0.18);
+}
+
+.dev-text-input[hidden] {
+  display: none;
+}
+
+.dev-text-input label {
+  color: rgba(196, 211, 228, 0.78);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.dev-text-input textarea {
+  width: 100%;
+  min-height: 6rem;
+  resize: vertical;
+  border: 1px solid rgba(164, 184, 207, 0.28);
+  border-radius: 0;
+  padding: 0.7rem;
+  color: rgba(245, 249, 253, 0.96);
+  background: rgba(2, 5, 10, 0.72);
+  font: inherit;
+  font-size: 0.88rem;
+  line-height: 1.4;
+}
+
+.dev-text-input button {
+  justify-self: start;
+  min-height: 2.45rem;
+  border: 1px solid rgba(236, 242, 247, 0.58);
+  border-radius: 0;
+  padding: 0 0.95rem;
+  color: #05070a;
+  background: rgba(236, 242, 247, 0.92);
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 850;
+}
+
+.dev-text-input button:disabled {
+  cursor: not-allowed;
+  opacity: 0.46;
+}
+
 .image-listener-figure > picture,
 .image-listener-figure > picture img {
   display: block;
@@ -653,12 +705,48 @@ figcaption {
 }
 
 .section-grid,
+.architecture-page-hero,
+.architecture-map,
 .architecture,
 .deployment,
 .reflection,
 .collaborators {
   margin: 1.5rem 0;
   padding: clamp(1.25rem, 3vw, 2rem);
+}
+
+.architecture-page-hero {
+  margin-top: 2rem;
+  color: #fff;
+  background:
+    linear-gradient(135deg, rgba(8, 74, 70, 0.96), rgba(21, 25, 31, 0.94)),
+    var(--accent-dark);
+}
+
+.architecture-page-hero h1 {
+  max-width: 14ch;
+  font-size: clamp(2.6rem, 6vw, 5.5rem);
+}
+
+.architecture-page-hero .eyebrow,
+.architecture-page-hero .lede {
+  color: rgba(236, 247, 244, 0.82);
+}
+
+.architecture-map {
+  border: 1px solid rgba(21, 25, 31, 0.08);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.architecture-columns {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.architecture-columns .info-card {
+  min-height: 100%;
 }
 
 .section-grid {
@@ -1048,6 +1136,10 @@ footer a {
   .timeline {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .architecture-columns {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 620px) {
@@ -1074,6 +1166,8 @@ footer a {
   .hero-copy,
   .podium-figure,
   .core-question,
+  .architecture-page-hero,
+  .architecture-map,
   .architecture,
   .deployment,
   .reflection,

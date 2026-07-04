@@ -34,6 +34,7 @@ gcloud run deploy "$SERVICE" \
   --memory 16Gi \
   --gpu 1 \
   --gpu-type nvidia-l4 \
+  --no-gpu-zonal-redundancy \
   --no-cpu-throttling \
   --timeout 900 \
   --set-env-vars OLLAMA_MODELS=/tmp/ollama,ZONETRIP_WHISPER_MODEL=base,ZONETRIP_OLLAMA_MODEL=gemma3:12b
