@@ -27,6 +27,7 @@ cp -R \
   docs \
   bin \
   manifesto \
+  assets \
   deploy \
   install.sh \
   "$build_dir"/

@@ -11,6 +11,7 @@ COPY index.html booth.html styles.css script.js booth.js booth-config.js favicon
 COPY docs ./docs
 COPY bin ./bin
 COPY manifesto ./manifesto
+COPY assets ./assets
 
 RUN chmod 0755 /app/bin/zonetrip-serve
 

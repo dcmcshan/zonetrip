@@ -21,6 +21,8 @@ test -f booth.js
 test -f booth-config.js
 test -f favicon.svg
 test -f docs/Zone_Trip_White_Paper_First_Review.pdf
+test -f assets/stage-microphone-mobile.jpg
+test -f assets/stage-microphone-desktop.jpg
 test -x bin/zonetrip-serve
 
 echo "Standalone audit passed."
