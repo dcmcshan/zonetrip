@@ -33,6 +33,14 @@ gcloud services enable run.googleapis.com cloudbuild.googleapis.com artifactregi
 
 The script deploys from source using the repository `Dockerfile`.
 
+For the Inquiry Institute profile on this machine:
+
+```sh
+CLOUDSDK_ACTIVE_CONFIG_NAME=default ./scripts/deploy-cloud-run.sh institute-481516 us-central1 zonetrip
+```
+
+That profile is expected to use `custodian@inquiry.institute`.
+
 ## Equivalent Manual Command
 
 ```sh

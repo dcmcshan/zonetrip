@@ -1,0 +1,9 @@
+.git
+.gitignore
+.dockerignore
+dist
+*.tar.gz
+.DS_Store
+deploy
+install.sh
+scripts/package-linux.sh

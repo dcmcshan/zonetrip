@@ -11,8 +11,13 @@ if [ -z "$PROJECT_ID" ]; then
 fi
 
 if ! command -v gcloud >/dev/null 2>&1; then
-  echo "gcloud CLI is required: https://cloud.google.com/sdk/docs/install" >&2
-  exit 1
+  if [ -x "$HOME/google-cloud-sdk/bin/gcloud" ]; then
+    PATH="$HOME/google-cloud-sdk/bin:$PATH"
+    export PATH
+  else
+    echo "gcloud CLI is required: https://cloud.google.com/sdk/docs/install" >&2
+    exit 1
+  fi
 fi
 
 cd "$(dirname "$0")/.."
