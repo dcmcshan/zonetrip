@@ -11,10 +11,29 @@
     <main class="image-listener-shell" aria-label="Zone Trip listening interface">
       <div id="stage-scene" class="stage-scene" aria-hidden="true"></div>
 
+      <section class="threshold" id="threshold" aria-labelledby="threshold-title">
+        <div class="threshold-panel">
+          <p class="threshold-kicker">Threshold</p>
+          <h1 id="threshold-title">Zone Trip</h1>
+          <p>
+            This is a mirror, not a vote, survey, report, therapy, mandate, or
+            recommendation system.
+          </p>
+          <ul>
+            <li>No metrics, rankings, faction labels, or claims of representation.</li>
+            <li>Raw speech belongs inside the local booth boundary.</li>
+            <li>Only non-identifying derived signals may survive the burn.</li>
+          </ul>
+          <button id="enter-threshold" class="threshold-button" type="button">
+            Enter
+          </button>
+        </div>
+      </section>
+
       <section class="listener-runtime" aria-live="polite" hidden>
         <h1 id="booth-title">Zone Trip</h1>
         <label>
-          <input id="consent-checkbox" type="checkbox" checked />
+          <input id="consent-checkbox" type="checkbox" />
           Listening
         </label>
         <div class="meter" aria-hidden="true">
@@ -34,12 +53,6 @@
     </main>
 
     <script src="booth-config.js"></script>
-    <script>
-      window.ZoneTripBoothConfig = {
-        ...window.ZoneTripBoothConfig,
-        autoStart: true,
-      };
-    </script>
     <script type="module" src="scene.js"></script>
     <script src="booth.js"></script>
   </body>

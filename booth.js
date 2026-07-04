@@ -9,6 +9,8 @@ const message = document.querySelector("#booth-message");
 const meterBar = document.querySelector("#meter-bar");
 const reviewPanel = document.querySelector(".recording-review");
 const playback = document.querySelector("#recording-playback");
+const threshold = document.querySelector("#threshold");
+const enterThresholdButton = document.querySelector("#enter-threshold");
 const boothConfig = window.ZoneTripBoothConfig || {};
 
 let mediaRecorder;
@@ -179,11 +181,27 @@ function stopRecording() {
   stopButton.disabled = true;
 }
 
+function enterThreshold() {
+  if (consentCheckbox) {
+    consentCheckbox.checked = true;
+  }
+  if (threshold) {
+    threshold.hidden = true;
+  }
+  if (startButton) {
+    startButton.disabled = true;
+  }
+  startRecording();
+}
+
 consentCheckbox.addEventListener("change", () => {
   startButton.disabled = !consentCheckbox.checked;
 });
 
 startButton.addEventListener("click", startRecording);
+if (enterThresholdButton) {
+  enterThresholdButton.addEventListener("click", enterThreshold);
+}
 stopButton.addEventListener("click", stopRecording);
 updateButton.addEventListener("click", async () => {
   if (!recordingBlob) {
@@ -233,6 +251,9 @@ if (!navigator.mediaDevices || !window.MediaRecorder) {
   setState("Unsupported browser");
   setMessage("This browser does not support local audio recording.");
   consentCheckbox.disabled = true;
+  if (enterThresholdButton) {
+    enterThresholdButton.disabled = true;
+  }
 } else if (boothConfig.autoStart) {
   window.addEventListener("load", () => {
     startButton.disabled = true;

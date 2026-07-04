@@ -62,6 +62,86 @@ body {
   user-select: none;
 }
 
+.threshold {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: grid;
+  place-items: center;
+  padding: 1.25rem;
+  color: rgba(236, 242, 247, 0.94);
+  background:
+    radial-gradient(circle at center, rgba(6, 10, 16, 0.32), rgba(2, 3, 7, 0.74) 64%),
+    rgba(2, 3, 7, 0.34);
+}
+
+.threshold[hidden] {
+  display: none;
+}
+
+.threshold-panel {
+  width: min(28rem, 100%);
+  padding: 1.25rem;
+  border: 1px solid rgba(160, 177, 196, 0.26);
+  background: rgba(4, 7, 12, 0.72);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.46);
+  backdrop-filter: blur(16px);
+}
+
+.threshold-kicker {
+  margin: 0 0 0.4rem;
+  color: rgba(177, 194, 214, 0.76);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.threshold h1 {
+  margin: 0 0 0.7rem;
+  color: #ffffff;
+  font-size: clamp(1.6rem, 7vw, 2.3rem);
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+.threshold p,
+.threshold li {
+  color: rgba(226, 234, 242, 0.88);
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
+.threshold p {
+  margin: 0;
+}
+
+.threshold ul {
+  margin: 1rem 0 1.15rem;
+  padding-left: 1.15rem;
+}
+
+.threshold li + li {
+  margin-top: 0.42rem;
+}
+
+.threshold-button {
+  width: 100%;
+  min-height: 3rem;
+  border: 1px solid rgba(236, 242, 247, 0.72);
+  border-radius: 0;
+  color: #05070a;
+  background: rgba(236, 242, 247, 0.94);
+  font: inherit;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+.threshold-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
 .image-listener-figure > picture,
 .image-listener-figure > picture img {
   display: block;
