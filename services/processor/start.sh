@@ -18,7 +18,7 @@ if command -v ollama >/dev/null 2>&1; then
   done
 
   if [ "${ZONETRIP_PULL_MODELS:-1}" = "1" ]; then
-    ollama pull "${ZONETRIP_OLLAMA_MODEL:-llama3.1:8b-instruct-q4_K_M}"
+    ollama pull "${ZONETRIP_OLLAMA_MODEL:-gemma3:12b}"
   fi
 else
   ollama_pid=""

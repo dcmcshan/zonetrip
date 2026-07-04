@@ -65,6 +65,8 @@ See `CLOUD_RUN.md`. This is intended for public static content review, not for p
 - `booth.js` - local microphone recording controls
 - `booth-config.js` - explicit world-model endpoint configuration
 - `CNAME` - GitHub Pages custom domain
+- `charter.md` - immutable LLM input for constitutional boundaries
+- `model.md` - seeded durable derived world model
 - `WORLD_MODEL.md` - boundary for derived model updates without transcript storage
 - `HARDWARE.md` - one-PC-per-booth hardware assumption
 - `PROCESSOR.md` - local Whisper/Ollama processor and Cloud Run simulator

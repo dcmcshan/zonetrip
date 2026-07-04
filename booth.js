@@ -11,6 +11,10 @@ const reviewPanel = document.querySelector(".recording-review");
 const playback = document.querySelector("#recording-playback");
 const threshold = document.querySelector("#threshold");
 const enterThresholdButton = document.querySelector("#enter-threshold");
+const worldDrawer = document.querySelector("#world-drawer");
+const worldDrawerToggle = document.querySelector("#world-drawer-toggle");
+const worldModelStatus = document.querySelector("#world-model-status");
+const worldModelText = document.querySelector("#world-model-text");
 const boothConfig = window.ZoneTripBoothConfig || {};
 
 let mediaRecorder;
@@ -34,6 +38,91 @@ function setState(text) {
   if (stateLabel) {
     stateLabel.textContent = text;
   }
+}
+
+function setWorldDrawerOpen(open) {
+  if (!worldDrawer || !worldDrawerToggle) {
+    return;
+  }
+
+  worldDrawer.dataset.open = open ? "true" : "false";
+  worldDrawerToggle.setAttribute("aria-expanded", String(open));
+}
+
+function setWorldModelStatus(text) {
+  if (worldModelStatus) {
+    worldModelStatus.textContent = text;
+  }
+}
+
+function boundedList(value) {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value
+    .map((item) => String(item).replace(/\s+/g, " ").trim())
+    .filter(Boolean);
+}
+
+function formatWorldSection(title, items) {
+  const body = boundedList(items);
+  const lines = [title];
+
+  if (!body.length) {
+    lines.push("- None surfaced");
+    return lines.join("\n");
+  }
+
+  for (const item of body) {
+    lines.push(`- ${item}`);
+  }
+
+  return lines.join("\n");
+}
+
+function renderWorldModel(payload) {
+  if (!worldModelText) {
+    return;
+  }
+
+  if (!payload || typeof payload !== "object") {
+    setWorldModelStatus("No derived model was returned.");
+    worldModelText.textContent = "No derived model yet.";
+    setWorldDrawerOpen(true);
+    return;
+  }
+
+  if (typeof payload.model_markdown === "string" && payload.model_markdown.trim()) {
+    setWorldModelStatus("Updated from local model.md.");
+    worldModelText.textContent = payload.model_markdown.trim();
+    setWorldDrawerOpen(true);
+    return;
+  }
+
+  const retained = payload.raw_transcript_retained === true ? "yes" : "no";
+  const lines = [
+    "Derived World Model",
+    `Raw transcript retained: ${retained}`,
+    "",
+    formatWorldSection("Tensions", payload.tensions),
+    "",
+    formatWorldSection("Contradictions", payload.contradictions),
+    "",
+    formatWorldSection("Absences", payload.absences),
+    "",
+    formatWorldSection("Symbolic Patterns", payload.symbolic_patterns),
+    "",
+    formatWorldSection("Minority Signals", payload.minority_signals),
+    "",
+    formatWorldSection("Open Questions", payload.open_questions),
+    "",
+    formatWorldSection("Rejected Boundary Material", payload.rejected_content),
+  ];
+
+  setWorldModelStatus("Updated from local STT and LLM derived signals.");
+  worldModelText.textContent = lines.join("\n");
+  setWorldDrawerOpen(true);
 }
 
 function formatElapsed(seconds) {
@@ -191,6 +280,7 @@ function enterThreshold() {
   if (startButton) {
     startButton.disabled = true;
   }
+  setWorldModelStatus("Listening. Awaiting local processor update.");
   startRecording();
 }
 
@@ -202,6 +292,11 @@ startButton.addEventListener("click", startRecording);
 if (enterThresholdButton) {
   enterThresholdButton.addEventListener("click", enterThreshold);
 }
+if (worldDrawerToggle) {
+  worldDrawerToggle.addEventListener("click", () => {
+    setWorldDrawerOpen(worldDrawer?.dataset.open !== "true");
+  });
+}
 stopButton.addEventListener("click", stopRecording);
 updateButton.addEventListener("click", async () => {
   if (!recordingBlob) {
@@ -211,12 +306,15 @@ updateButton.addEventListener("click", async () => {
   if (!boothConfig.worldModelEndpoint) {
     setState("Endpoint missing");
     setMessage("No world-model endpoint is configured for this booth.");
+    setWorldModelStatus("No local processor endpoint is configured.");
+    setWorldDrawerOpen(true);
     return;
   }
 
   updateButton.disabled = true;
   setState("Updating");
   setMessage("Sending ephemeral audio for derived world-model update.");
+  setWorldModelStatus("Processing local audio into derived signals.");
 
   try {
     const response = await fetch(boothConfig.worldModelEndpoint, {
@@ -232,6 +330,8 @@ updateButton.addEventListener("click", async () => {
       throw new Error(`World model update failed: ${response.status}`);
     }
 
+    const payload = await response.json().catch(() => null);
+    renderWorldModel(payload);
     clearRecording();
     setState("Updated");
     setMessage("World model update accepted. Ephemeral audio was cleared from this browser.");
@@ -239,6 +339,8 @@ updateButton.addEventListener("click", async () => {
     updateButton.disabled = false;
     setState("Update failed");
     setMessage("The world model was not updated. Delete or retry from this browser.");
+    setWorldModelStatus("The processor did not return a world-model update.");
+    setWorldDrawerOpen(true);
   }
 });
 deleteButton.addEventListener("click", () => {
@@ -260,3 +362,8 @@ if (!navigator.mediaDevices || !window.MediaRecorder) {
     startRecording();
   });
 }
+
+window.ZoneTripWorldDrawer = {
+  render: renderWorldModel,
+  setOpen: setWorldDrawerOpen,
+};

@@ -30,6 +30,28 @@
         </div>
       </section>
 
+      <section
+        class="world-drawer"
+        id="world-drawer"
+        data-open="false"
+        aria-labelledby="world-drawer-title"
+      >
+        <button
+          class="world-drawer-toggle"
+          id="world-drawer-toggle"
+          type="button"
+          aria-expanded="false"
+          aria-controls="world-drawer-body"
+        >
+          World Model
+        </button>
+        <div class="world-drawer-body" id="world-drawer-body">
+          <h2 id="world-drawer-title">World Model</h2>
+          <p id="world-model-status">Awaiting local STT and LLM update.</p>
+          <pre id="world-model-text">No derived model yet.</pre>
+        </div>
+      </section>
+
       <section class="listener-runtime" aria-live="polite" hidden>
         <h1 id="booth-title">Zone Trip</h1>
         <label>

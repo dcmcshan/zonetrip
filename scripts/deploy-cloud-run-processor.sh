@@ -36,7 +36,7 @@ gcloud run deploy "$SERVICE" \
   --gpu-type nvidia-l4 \
   --no-cpu-throttling \
   --timeout 900 \
-  --set-env-vars OLLAMA_MODELS=/tmp/ollama,ZONETRIP_WHISPER_MODEL=base,ZONETRIP_OLLAMA_MODEL=llama3.1:8b-instruct-q4_K_M
+  --set-env-vars OLLAMA_MODELS=/tmp/ollama,ZONETRIP_WHISPER_MODEL=base,ZONETRIP_OLLAMA_MODEL=gemma3:12b
 
 url="$(gcloud run services describe "$SERVICE" \
   --project "$PROJECT_ID" \

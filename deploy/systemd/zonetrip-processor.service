@@ -11,10 +11,12 @@ WorkingDirectory=/opt/zonetrip/services/processor
 Environment=PORT=8090
 Environment=ZONETRIP_PROCESSOR_HOST=127.0.0.1
 Environment=OLLAMA_URL=http://127.0.0.1:11434
-Environment=ZONETRIP_OLLAMA_MODEL=llama3.1:8b-instruct-q4_K_M
+Environment=ZONETRIP_OLLAMA_MODEL=gemma3:12b
 Environment=ZONETRIP_WHISPER_MODEL=base
 Environment=ZONETRIP_WHISPER_DEVICE=auto
 Environment=ZONETRIP_WHISPER_COMPUTE_TYPE=auto
+Environment=ZONETRIP_MODEL_PATH=/var/lib/zonetrip/model.md
+Environment=ZONETRIP_CHARTER_PATH=/opt/zonetrip/charter.md
 Environment=ZONETRIP_PULL_MODELS=0
 ExecStart=/bin/sh -c '/opt/zonetrip/.venv/bin/uvicorn app:app --host "$ZONETRIP_PROCESSOR_HOST" --port "$PORT"'
 Restart=on-failure
@@ -23,7 +25,7 @@ NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=strict
 ProtectHome=true
-ReadWritePaths=/tmp
+ReadWritePaths=/tmp /var/lib/zonetrip
 
 [Install]
 WantedBy=multi-user.target

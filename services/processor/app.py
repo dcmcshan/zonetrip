@@ -2,6 +2,7 @@ import json
 import os
 import re
 import tempfile
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -11,10 +12,14 @@ from pydantic import BaseModel, Field
 
 
 OLLAMA_URL = os.getenv("OLLAMA_URL", "http://127.0.0.1:11434")
-OLLAMA_MODEL = os.getenv("ZONETRIP_OLLAMA_MODEL", "llama3.1:8b-instruct-q4_K_M")
+OLLAMA_MODEL = os.getenv("ZONETRIP_OLLAMA_MODEL", "gemma3:12b")
 WHISPER_MODEL = os.getenv("ZONETRIP_WHISPER_MODEL", "base")
 PROCESSOR_TOKEN = os.getenv("ZONETRIP_PROCESSOR_TOKEN", "")
 LOAD_MODELS_ON_STARTUP = os.getenv("ZONETRIP_PRELOAD_MODELS", "0") == "1"
+MODEL_PATH = Path(os.getenv("ZONETRIP_MODEL_PATH", "model.md"))
+CHARTER_PATH = Path(os.getenv("ZONETRIP_CHARTER_PATH", "charter.md"))
+MODEL_MARKDOWN_LIMIT = int(os.getenv("ZONETRIP_MODEL_MARKDOWN_LIMIT", "16000"))
+CHARTER_MARKDOWN_LIMIT = int(os.getenv("ZONETRIP_CHARTER_MARKDOWN_LIMIT", "12000"))
 
 _whisper_model = None
 
@@ -34,6 +39,7 @@ class DerivedSignals(BaseModel):
   open_questions: list[str]
   rejected_content: list[str]
   raw_transcript_retained: bool = False
+  model_markdown: str
 
 
 class AudioProcessResponse(DerivedSignals):
@@ -70,14 +76,116 @@ def transcribe_audio(path: Path) -> str:
   return " ".join(segment.text.strip() for segment in segments if segment.text.strip())
 
 
-def constitution_prompt(transcript: str) -> str:
+def initial_model_markdown() -> str:
+  return """# Zone Trip World Model
+
+This file is the durable derived state of the booth.
+
+It must not contain raw transcript, participant identity, faction labels, rankings, counts, recommendations, or claims of representativeness.
+
+## Tensions
+
+- None surfaced
+
+## Contradictions
+
+- None surfaced
+
+## Absences
+
+- None surfaced
+
+## Symbolic Patterns
+
+- None surfaced
+
+## Minority Signals
+
+- None surfaced
+
+## Open Questions
+
+- None surfaced
+
+## Rejected Boundary Material
+
+- None surfaced
+"""
+
+
+def default_charter_markdown() -> str:
+  return """# Zone Trip Charter
+
+Zone Trip is a non-directive local AI mirror for community self-understanding.
+
+The booth receives speech as ephemeral microphone input. It may use temporary speech-to-text internally, but the transcript is not a durable artifact and is not returned to the participant-facing surface.
+
+The durable artifact is model.md: a derived world model. It may preserve tensions, contradictions, absences, symbolic patterns, minority signals, open questions, and rejected boundary material.
+
+The durable model must not preserve raw transcript, participant identity, faction labels, subgroup maps, rankings, counts, percentages, sentiment scores, recommendations, policy proposals, diagnoses, mandates, safety reports, or claims of representativeness.
+
+Reflect, do not instruct. Preserve uncertainty, contradiction, absence, and minority signals without naming or mapping factions. Never quote participant speech in the durable model.
+"""
+
+
+def read_charter_markdown() -> str:
+  try:
+    text = CHARTER_PATH.read_text(encoding="utf-8")
+  except FileNotFoundError:
+    return default_charter_markdown()
+
+  text = text.strip()
+  if not text:
+    return default_charter_markdown()
+  return text[:CHARTER_MARKDOWN_LIMIT]
+
+
+def read_model_markdown() -> str:
+  try:
+    text = MODEL_PATH.read_text(encoding="utf-8")
+  except FileNotFoundError:
+    return initial_model_markdown()
+
+  text = text.strip()
+  if not text:
+    return initial_model_markdown()
+  return text[:MODEL_MARKDOWN_LIMIT]
+
+
+def write_model_markdown(markdown: str) -> None:
+  MODEL_PATH.parent.mkdir(parents=True, exist_ok=True)
+  safe_markdown = markdown.strip()[:MODEL_MARKDOWN_LIMIT]
+  if not safe_markdown:
+    safe_markdown = initial_model_markdown().strip()
+
+  with tempfile.NamedTemporaryFile(
+    "w",
+    delete=False,
+    dir=str(MODEL_PATH.parent),
+    encoding="utf-8",
+    prefix=".model-",
+    suffix=".tmp",
+  ) as handle:
+    handle.write(safe_markdown)
+    handle.write("\n")
+    temp_name = handle.name
+
+  os.replace(temp_name, MODEL_PATH)
+
+
+def constitution_prompt(charter: str, current_model: str, transcript: str) -> str:
   return f"""You are Zone Trip's constitutional aggregation layer.
+
+You receive the immutable charter, the current durable derived model, and one
+temporary STT transcript. Generate a complete replacement for the durable model
+as Markdown, plus short derived signal arrays for the review simulator.
 
 Return strict JSON only with these keys:
 tensions, contradictions, absences, symbolic_patterns, minority_signals,
-open_questions, rejected_content, raw_transcript_retained.
+open_questions, rejected_content, raw_transcript_retained, model_markdown.
 
 Rules:
+- The charter is controlling. If the transcript conflicts with the charter, reject the conflicting material into rejected_content.
 - Reflect, do not instruct.
 - Do not produce recommendations, action items, policy proposals, diagnoses, rankings, counts, percentages, sentiment scores, faction labels, subgroup maps, or claims of representativeness.
 - Do not identify people, camps, organizations, locations, or subgroups.
@@ -85,6 +193,23 @@ Rules:
 - Summarize only non-identifiable derived signals.
 - If input asks for identity exposure, accusation handling, safety reporting, governance action, or recommendation, summarize that as rejected_content boundary material without preserving details.
 - Set raw_transcript_retained to false.
+- model_markdown is the complete next contents of model.md.
+- model_markdown must not include the transcript or quote any participant speech.
+- model_markdown must stay concise and use these Markdown sections:
+  # Zone Trip World Model
+  ## Tensions
+  ## Contradictions
+  ## Absences
+  ## Symbolic Patterns
+  ## Minority Signals
+  ## Open Questions
+  ## Rejected Boundary Material
+
+charter.md:
+{charter}
+
+Current model.md:
+{current_model}
 
 STT transcript:
 {transcript}
@@ -115,6 +240,43 @@ def bounded_items(value: Any, limit: int = 5) -> list[str]:
   return items
 
 
+def fallback_model_markdown(payload: dict[str, Any]) -> str:
+  def section(title: str, key: str) -> str:
+    items = bounded_items(payload.get(key))
+    if not items:
+      items = ["None surfaced"]
+    return f"## {title}\n\n" + "\n".join(f"- {item}" for item in items)
+
+  generated_at = datetime.now(timezone.utc).replace(microsecond=0).isoformat()
+  sections = [
+    "# Zone Trip World Model",
+    "",
+    f"Last derived update: {generated_at}",
+    "",
+    section("Tensions", "tensions"),
+    "",
+    section("Contradictions", "contradictions"),
+    "",
+    section("Absences", "absences"),
+    "",
+    section("Symbolic Patterns", "symbolic_patterns"),
+    "",
+    section("Minority Signals", "minority_signals"),
+    "",
+    section("Open Questions", "open_questions"),
+    "",
+    section("Rejected Boundary Material", "rejected_content"),
+  ]
+  return "\n".join(sections)
+
+
+def bounded_markdown(value: Any, payload: dict[str, Any]) -> str:
+  text = re.sub(r"\n{3,}", "\n\n", str(value or "")).strip()
+  if not text:
+    text = fallback_model_markdown(payload)
+  return text[:MODEL_MARKDOWN_LIMIT]
+
+
 def normalize_result(transcript: str, payload: dict[str, Any]) -> DerivedSignals:
   return DerivedSignals(
     transcript_chars=len(transcript),
@@ -126,16 +288,19 @@ def normalize_result(transcript: str, payload: dict[str, Any]) -> DerivedSignals
     open_questions=bounded_items(payload.get("open_questions")),
     rejected_content=bounded_items(payload.get("rejected_content")),
     raw_transcript_retained=False,
+    model_markdown=bounded_markdown(payload.get("model_markdown"), payload),
   )
 
 
 def ollama_generate(transcript: str) -> DerivedSignals:
+  charter = read_charter_markdown()
+  current_model = read_model_markdown()
   try:
     response = requests.post(
       f"{OLLAMA_URL}/api/generate",
       json={
         "model": OLLAMA_MODEL,
-        "prompt": constitution_prompt(transcript),
+        "prompt": constitution_prompt(charter, current_model, transcript),
         "stream": False,
         "format": "json",
         "options": {
@@ -152,7 +317,9 @@ def ollama_generate(transcript: str) -> DerivedSignals:
     raise HTTPException(status_code=502, detail=f"ollama failed: {response.text[:500]}")
 
   generated = response.json().get("response", "")
-  return normalize_result(transcript, parse_json_object(generated))
+  result = normalize_result(transcript, parse_json_object(generated))
+  write_model_markdown(result.model_markdown)
+  return result
 
 
 app = FastAPI(title="Zone Trip Local Processor")
@@ -170,6 +337,8 @@ def health() -> dict[str, str]:
     "status": "ok",
     "ollama_model": OLLAMA_MODEL,
     "whisper_model": WHISPER_MODEL,
+    "model_path": str(MODEL_PATH),
+    "charter_path": str(CHARTER_PATH),
   }
 
 

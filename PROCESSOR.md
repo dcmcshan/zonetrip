@@ -11,9 +11,11 @@ Local path:
 1. A microphone connected to the booth PC captures audio.
 2. The local capture process sends temporary audio to the processor on the same Linux box.
 3. Processor runs Whisper through `faster-whisper`.
-4. Processor sends the STT transcript to local Ollama.
-5. Ollama returns constitutionally filtered derived signals.
-6. Temporary audio and transcript buffers die with the request.
+4. Processor reads immutable `charter.md` and current durable `model.md`.
+5. Processor sends `charter.md`, `model.md`, and the temporary STT transcript to local Ollama.
+6. Ollama returns a complete replacement `model.md` plus simulator review fields.
+7. Processor atomically writes the new `model.md`.
+8. Temporary audio and transcript buffers die with the request.
 
 Default local endpoints:
 
@@ -39,14 +41,15 @@ The installer:
 
 - installs Ollama if missing
 - creates `/opt/zonetrip/.venv`
+- seeds `/var/lib/zonetrip/model.md` from the packaged model
 - installs `services/processor/requirements.txt`
-- pulls `llama3.1:8b-instruct-q4_K_M` by default
+- pulls `gemma3:12b` by default
 - installs `zonetrip-processor.service`
 
 Override the model before installing:
 
 ```sh
-sudo ZONETRIP_OLLAMA_MODEL=mistral:7b-instruct ./scripts/install-local-ai.sh
+sudo ZONETRIP_OLLAMA_MODEL=gemma3:4b ./scripts/install-local-ai.sh
 ```
 
 ## Capture From The Booth Microphone
@@ -109,3 +112,6 @@ Response fields are limited to constitutionally allowed derived signals:
 - `open_questions`
 - `rejected_content`
 - `raw_transcript_retained`
+- `model_markdown`
+
+`model_markdown` is the complete current derived `model.md`. It is generated under `charter.md` and must not contain transcript text.

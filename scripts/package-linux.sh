@@ -19,6 +19,8 @@ cp -R \
   WORLD_MODEL.md \
   HARDWARE.md \
   PROCESSOR.md \
+  charter.md \
+  model.md \
   index.html \
   booth.html \
   styles.css \

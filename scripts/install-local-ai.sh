@@ -3,7 +3,8 @@ set -eu
 
 PREFIX="${PREFIX:-/opt/zonetrip}"
 SERVICE_USER="${SERVICE_USER:-zonetrip}"
-OLLAMA_MODEL="${ZONETRIP_OLLAMA_MODEL:-llama3.1:8b-instruct-q4_K_M}"
+OLLAMA_MODEL="${ZONETRIP_OLLAMA_MODEL:-gemma3:12b}"
+STATE_DIR="${ZONETRIP_STATE_DIR:-/var/lib/zonetrip}"
 
 if [ "$(id -u)" -ne 0 ]; then
   echo "install-local-ai.sh must be run as root" >&2
@@ -28,6 +29,11 @@ if ! id "$SERVICE_USER" >/dev/null 2>&1; then
   useradd --system --home "$PREFIX" --shell /usr/sbin/nologin "$SERVICE_USER"
 fi
 
+mkdir -p "$STATE_DIR"
+if [ ! -f "$STATE_DIR/model.md" ]; then
+  cp "$PREFIX/model.md" "$STATE_DIR/model.md"
+fi
+
 python3 -m venv "$PREFIX/.venv"
 "$PREFIX/.venv/bin/python" -m pip install --upgrade pip
 "$PREFIX/.venv/bin/python" -m pip install -r "$PREFIX/services/processor/requirements.txt"
@@ -44,7 +50,7 @@ fi
 
 ollama pull "$OLLAMA_MODEL"
 
-chown -R "$SERVICE_USER:$SERVICE_USER" "$PREFIX"
+chown -R "$SERVICE_USER:$SERVICE_USER" "$PREFIX" "$STATE_DIR"
 
 if command -v systemctl >/dev/null 2>&1; then
   cp "$PREFIX/deploy/systemd/zonetrip-processor.service" /etc/systemd/system/zonetrip-processor.service
