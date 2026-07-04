@@ -50,33 +50,6 @@ function loadTexture(path) {
   });
 }
 
-function makeMistTexture(seed = 0) {
-  const canvas = document.createElement("canvas");
-  canvas.width = 512;
-  canvas.height = 512;
-  const ctx = canvas.getContext("2d");
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  for (let i = 0; i < 58; i += 1) {
-    const angle = i * 0.83 + seed;
-    const x = 256 + Math.cos(angle) * (28 + (i % 7) * 13);
-    const y = 256 + Math.sin(angle * 0.8) * (45 + (i % 9) * 9);
-    const radius = 42 + ((i * 17) % 76);
-    const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius);
-    gradient.addColorStop(0, "rgba(210, 235, 255, 0.14)");
-    gradient.addColorStop(0.5, "rgba(120, 170, 210, 0.045)");
-    gradient.addColorStop(1, "rgba(255,255,255,0)");
-    ctx.fillStyle = gradient;
-    ctx.beginPath();
-    ctx.ellipse(x, y, radius * 0.72, radius * 1.18, angle, 0, Math.PI * 2);
-    ctx.fill();
-  }
-
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.colorSpace = THREE.SRGBColorSpace;
-  return texture;
-}
-
 const [microphoneTexture] = await Promise.all([
   loadTexture("assets/microphone-overlay.png"),
 ]);
@@ -102,14 +75,6 @@ const trimMaterial = new THREE.MeshStandardMaterial({
   color: 0x05070a,
   roughness: 0.42,
   metalness: 0.65,
-});
-
-const mirrorGlassMaterial = new THREE.MeshStandardMaterial({
-  color: 0x0e1c26,
-  roughness: 0.18,
-  metalness: 0.45,
-  emissive: 0x0b1d2b,
-  emissiveIntensity: 0.4,
 });
 
 const ledMaterial = new THREE.MeshStandardMaterial({
@@ -147,17 +112,6 @@ function addSeam(length, x, y, z, rotY = 0, rotZ = 0) {
   seam.rotation.set(0, rotY, rotZ);
   booth.add(seam);
   return seam;
-}
-
-function addLedStrip(length, x, y, z, rotY = 0, rotZ = 0) {
-  const strip = new THREE.Mesh(new THREE.BoxGeometry(length, 0.035, 0.035), ledMaterial);
-  strip.position.set(x, y, z);
-  strip.rotation.set(0, rotY, rotZ);
-  booth.add(strip);
-  const glow = new THREE.PointLight(0xb6d9ff, 0.28, 2.2, 2);
-  glow.position.set(x, y, z + 0.08);
-  booth.add(glow);
-  return strip;
 }
 
 function addLightBar(x, y, z, rotY = 0) {
@@ -289,73 +243,9 @@ roofEdges.position.copy(roof.position);
 roofEdges.scale.copy(roof.scale);
 booth.add(roofEdges);
 
-const rearRail = new THREE.Mesh(new THREE.BoxGeometry(3.5, 0.08, 0.08), ledMaterial);
-rearRail.position.set(0, -0.48, -2.61);
-booth.add(rearRail);
-
 const desk = new THREE.Mesh(new THREE.BoxGeometry(3.35, 0.42, 0.34), trimMaterial);
 desk.position.set(0, -0.7, -2.55);
 booth.add(desk);
-
-const mirror = new THREE.Mesh(new THREE.CircleGeometry(0.95, 96), mirrorGlassMaterial);
-mirror.position.set(0, 0.92, -2.5);
-mirror.scale.y = 1.22;
-booth.add(mirror);
-
-const mirrorRim = new THREE.Mesh(
-  new THREE.TorusGeometry(0.98, 0.045, 16, 96),
-  new THREE.MeshStandardMaterial({
-    color: 0x1b2532,
-    roughness: 0.35,
-    metalness: 0.75,
-    emissive: 0x122235,
-    emissiveIntensity: 0.35,
-  }),
-);
-mirrorRim.position.copy(mirror.position);
-mirrorRim.scale.y = 1.22;
-booth.add(mirrorRim);
-
-const mistA = new THREE.Mesh(
-  new THREE.CircleGeometry(0.86, 96),
-  new THREE.MeshBasicMaterial({
-    map: makeMistTexture(0),
-    transparent: true,
-    opacity: 0.56,
-    blending: THREE.AdditiveBlending,
-    depthWrite: false,
-  }),
-);
-mistA.position.set(0, 0.92, -2.43);
-mistA.scale.y = 1.18;
-booth.add(mistA);
-
-const mistB = new THREE.Mesh(
-  new THREE.CircleGeometry(0.78, 96),
-  new THREE.MeshBasicMaterial({
-    map: makeMistTexture(1.7),
-    transparent: true,
-    opacity: 0.32,
-    blending: THREE.AdditiveBlending,
-    depthWrite: false,
-  }),
-);
-mistB.position.set(0, 0.92, -2.41);
-mistB.scale.y = 1.13;
-booth.add(mistB);
-
-for (const strip of [
-  [-1.5, 1.45, -2.61, 0, 0.55],
-  [1.5, 1.45, -2.61, 0, -0.55],
-  [-1.95, 0.3, -2.18, -0.62, -0.5],
-  [1.95, 0.3, -2.18, 0.62, 0.5],
-  [-2.78, 1.08, -0.73, -0.28, 0.48],
-  [2.78, 1.08, -0.73, 0.28, -0.48],
-  [-2.65, -0.4, -0.73, -0.28, -0.65],
-  [2.65, -0.4, -0.73, 0.28, 0.65],
-]) {
-  addLedStrip(0.86, ...strip);
-}
 
 for (const seam of [
   [1.15, -1.06, 1.12, -2.58, 0, -0.72],
@@ -384,29 +274,13 @@ const microphone = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), micMaterial);
 microphone.position.set(0, -0.53, 0.62);
 scene.add(microphone);
 
-const ambient = new THREE.HemisphereLight(0x7b91aa, 0x07080b, 0.34);
+const ambient = new THREE.HemisphereLight(0x5f7188, 0x030407, 0.18);
 scene.add(ambient);
 
 const overhead = new THREE.SpotLight(0xc8ddff, 4.8, 9, 0.38, 0.72, 1.25);
 overhead.position.set(0, 3.15, 1.25);
 overhead.target.position.set(0, -1.28, 0);
 scene.add(overhead, overhead.target);
-
-const rimLeft = new THREE.PointLight(0x6f92c8, 1.15, 5.4, 2.2);
-rimLeft.position.set(-3.2, 0.55, 0.9);
-scene.add(rimLeft);
-
-const rimRight = new THREE.PointLight(0x6f92c8, 1.15, 5.4, 2.2);
-rimRight.position.set(3.2, 0.55, 0.9);
-scene.add(rimRight);
-
-const mirrorGlow = new THREE.PointLight(0x9fd7ff, 2.2, 4.2, 1.7);
-mirrorGlow.position.set(0, 0.92, -1.85);
-scene.add(mirrorGlow);
-
-const footGlow = new THREE.PointLight(0x7988ff, 1.6, 5, 2);
-footGlow.position.set(0, -1.18, 1.35);
-scene.add(footGlow);
 
 window.ZoneTripScene = {
   scene,
@@ -426,10 +300,6 @@ window.ZoneTripScene = {
   lighting: {
     ambient,
     overhead,
-    mirror: mirrorGlow,
-    foot: footGlow,
-    rimLeft,
-    rimRight,
   },
 };
 
@@ -442,24 +312,19 @@ function resize() {
 
   const mobile = width <= 620;
   cameraBase.mobile = mobile;
-  cameraBase.position.set(0, mobile ? 0.9 : 1.12, mobile ? 8.9 : 7.7);
-  cameraBase.target.set(0, mobile ? 0.45 : 0.42, -1.0);
+  cameraBase.position.set(0, mobile ? 0.46 : 0.86, mobile ? 10.7 : 8.25);
+  cameraBase.target.set(0, mobile ? 0.1 : 0.18, -1.05);
   camera.position.copy(cameraBase.position);
-  booth.scale.setScalar(mobile ? 1.16 : 1);
-  booth.position.y = mobile ? -0.05 : 0;
-  microphone.scale.set(mobile ? 1.58 : 1.4, mobile ? 2.81 : 2.48, 1);
-  microphone.position.y = mobile ? -0.28 : -0.55;
+  booth.scale.setScalar(mobile ? 0.98 : 0.96);
+  booth.position.y = mobile ? -0.16 : -0.08;
+  microphone.scale.set(mobile ? 1.22 : 1.24, mobile ? 2.17 : 2.2, 1);
+  microphone.position.y = mobile ? -0.44 : -0.5;
   microphone.position.z = mobile ? 0.74 : 0.62;
   updateCameraFromSensors();
 }
 
 function animate(now = 0) {
   const t = now * 0.001;
-  mistA.rotation.z = Math.sin(t * 0.16) * 0.22;
-  mistB.rotation.z = 0.8 + Math.cos(t * 0.13) * 0.28;
-  mistA.material.opacity = 0.48 + Math.sin(t * 0.7) * 0.08;
-  mistB.material.opacity = 0.28 + Math.cos(t * 0.53) * 0.06;
-  mirrorGlow.intensity = 2 + Math.sin(t * 0.9) * 0.38;
   overhead.intensity = 4.55 + Math.cos(t * 0.22) * 0.2;
   updateCameraFromSensors();
   renderer.render(scene, camera);
