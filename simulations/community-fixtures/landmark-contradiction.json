@@ -1,0 +1,40 @@
+{
+  "id": "landmark-contradiction",
+  "title": "A shared symbol carries opposed meanings",
+  "temporary_input": "The old depot keeps coming up. Some people treat it like proof that the community still has a center, while others talk about it like a reminder of what has already been lost.",
+  "simulated_payload": {
+    "tensions": [
+      "A shared symbol carries both attachment and grief."
+    ],
+    "contradictions": [
+      "The same remembered place can be used to claim continuity and to mark unresolved loss."
+    ],
+    "absences": [],
+    "symbolic_patterns": [
+      "A common landmark functions as an anchor for memory and as evidence that memory no longer settles belonging."
+    ],
+    "minority_signals": [],
+    "open_questions": [
+      "Whether common symbols still gather people together or mainly preserve disagreement remains unsettled."
+    ],
+    "rejected_content": [],
+    "raw_transcript_retained": false,
+    "model_markdown": "# Zone Trip World Model\n\n## Tensions\n\n- A shared symbol carries both attachment and grief.\n\n## Contradictions\n\n- The same remembered place can be used to claim continuity and to mark unresolved loss.\n\n## Absences\n\n- None surfaced\n\n## Symbolic Patterns\n\n- A common landmark functions as an anchor for memory and as evidence that memory no longer settles belonging.\n\n## Minority Signals\n\n- None surfaced\n\n## Open Questions\n\n- Whether common symbols still gather people together or mainly preserve disagreement remains unsettled.\n\n## Rejected Boundary Material\n\n- None surfaced"
+  },
+  "expected_sections": [
+    "Contradictions",
+    "Symbolic Patterns",
+    "Open Questions"
+  ],
+  "must_include": [
+    "symbol",
+    "memory",
+    "loss"
+  ],
+  "must_not_include": [
+    "old depot",
+    "community still has a center",
+    "what has already been lost"
+  ],
+  "notes": "Tests symbolic abstraction and noun scrubbing around a distinctive landmark."
+}

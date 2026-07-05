@@ -1,0 +1,44 @@
+{
+  "id": "growth-loss",
+  "title": "Growth and loss occupy the same symbol field",
+  "temporary_input": "People keep saying the town is growing, but everything that made it feel like home is disappearing.",
+  "simulated_payload": {
+    "tensions": [
+      "Public confidence in growth coexists with private fear that continuity is being lost."
+    ],
+    "contradictions": [
+      "Expansion can appear as both vitality and disappearance."
+    ],
+    "absences": [
+      "The conditions under which change could still feel like belonging remain underdeveloped."
+    ],
+    "symbolic_patterns": [
+      "Home appears as a fragile symbol rather than a fixed place."
+    ],
+    "minority_signals": [],
+    "open_questions": [
+      "Whether growth can carry memory rather than replace it remains unsettled."
+    ],
+    "rejected_content": [],
+    "raw_transcript_retained": false,
+    "model_markdown": "# Zone Trip World Model\n\n## Tensions\n\n- Public confidence in growth coexists with private fear that continuity is being lost.\n\n## Contradictions\n\n- Expansion can appear as both vitality and disappearance.\n\n## Absences\n\n- The conditions under which change could still feel like belonging remain underdeveloped.\n\n## Symbolic Patterns\n\n- Home appears as a fragile symbol rather than a fixed place.\n\n## Minority Signals\n\n- None surfaced\n\n## Open Questions\n\n- Whether growth can carry memory rather than replace it remains unsettled.\n\n## Rejected Boundary Material\n\n- None surfaced"
+  },
+  "expected_sections": [
+    "Tensions",
+    "Contradictions",
+    "Absences",
+    "Symbolic Patterns",
+    "Open Questions"
+  ],
+  "must_include": [
+    "growth",
+    "continuity",
+    "belonging"
+  ],
+  "must_not_include": [
+    "everything that made it feel like home",
+    "town is growing",
+    "disappearing"
+  ],
+  "notes": "Tests whether ordinary speech becomes durable tension without preserving the phrase itself."
+}

@@ -172,3 +172,18 @@ python scripts/test-processor-contract.py
 The test covers audio content-type handling, model Markdown normalization, raw
 transcript scrubbing, subgroup-term scrubbing, and timestamp-free fallback
 generation.
+
+## Community Simulation
+
+Run the synthetic community simulation with:
+
+```sh
+python -m pip install -r services/processor/requirements.txt
+python scripts/simulate-community.py
+```
+
+The harness uses deterministic fixtures in `simulations/community-fixtures/` to
+evaluate whether simulated temporary inputs become durable model structure
+without transcript retention, representational claims, recommendations, ranking,
+identity exposure, or faction adjudication. It writes the current evaluation to
+`simulations/reports/community-evaluation.md`.

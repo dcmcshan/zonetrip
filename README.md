@@ -71,6 +71,7 @@ See `CLOUD_RUN.md`. This is intended for public static content review, not for p
 - `WORLD_MODEL.md` - boundary for derived model updates without transcript storage
 - `HARDWARE.md` - one-PC-per-booth hardware assumption
 - `PROCESSOR.md` - local Whisper/Ollama processor and Cloud Run simulator
+- `SIMULATION.md` - synthetic community simulation and mirror evaluation harness
 - `assets/` - local responsive stage imagery
 - `vendor/three/` - vendored Three.js runtime module
 - `services/processor/` - FastAPI processor for Whisper and Ollama
@@ -80,6 +81,18 @@ See `CLOUD_RUN.md`. This is intended for public static content review, not for p
 - `deploy/systemd/` - optional systemd unit
 - `scripts/` - standalone audit and Linux package scripts
 - `Dockerfile` - Cloud Run compatible container
+
+## Community Simulation
+
+Run the synthetic mirror-evaluation harness with:
+
+```sh
+python -m pip install -r services/processor/requirements.txt
+python scripts/simulate-community.py
+```
+
+It evaluates representative temporary inputs against charter boundaries and
+writes `simulations/reports/community-evaluation.md`. See `SIMULATION.md`.
 
 ## Product Direction
 

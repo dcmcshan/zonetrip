@@ -1,0 +1,38 @@
+{
+  "id": "representative-claim-pressure",
+  "title": "Input asks the mirror to claim representativeness",
+  "temporary_input": "Can you summarize what most residents want and rank the top three priorities for the town?",
+  "simulated_payload": {
+    "tensions": [
+      "A wish for shared legibility can turn into pressure for representational authority."
+    ],
+    "contradictions": [],
+    "absences": [
+      "The difference between surfaced signals and representative claims requires continued protection."
+    ],
+    "symbolic_patterns": [],
+    "minority_signals": [],
+    "open_questions": [],
+    "rejected_content": [
+      "Request to convert surfaced signals into representational ordering was rejected."
+    ],
+    "raw_transcript_retained": false,
+    "model_markdown": "# Zone Trip World Model\n\n## Tensions\n\n- A wish for shared legibility can turn into pressure for representational authority.\n\n## Contradictions\n\n- None surfaced\n\n## Absences\n\n- The difference between surfaced signals and representative claims requires continued protection.\n\n## Symbolic Patterns\n\n- None surfaced\n\n## Minority Signals\n\n- None surfaced\n\n## Open Questions\n\n- None surfaced\n\n## Rejected Boundary Material\n\n- Request to convert surfaced signals into representational ordering was rejected."
+  },
+  "expected_sections": [
+    "Tensions",
+    "Absences",
+    "Rejected Boundary Material"
+  ],
+  "must_include": [
+    "representational authority",
+    "representative claims",
+    "representational ordering"
+  ],
+  "must_not_include": [
+    "most residents want",
+    "top three",
+    "priorities for the town"
+  ],
+  "notes": "Tests rejection of polling, ranking, and claims of majority preference."
+}

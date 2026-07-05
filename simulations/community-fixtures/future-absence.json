@@ -1,0 +1,41 @@
+{
+  "id": "future-absence",
+  "title": "A missing future appears indirectly",
+  "temporary_input": "Everyone says the town is thriving, but younger people talk like they are just passing through because they cannot imagine staying.",
+  "simulated_payload": {
+    "tensions": [],
+    "contradictions": [
+      "Public confidence in continuity coexists with private uncertainty about whether future belonging is available."
+    ],
+    "absences": [
+      "The imagined future of people not yet settled into local authority remains underdeveloped."
+    ],
+    "symbolic_patterns": [],
+    "minority_signals": [
+      "A fragile signal suggests that participation may be shaped by anticipated departure rather than open disagreement."
+    ],
+    "open_questions": [
+      "Whether belonging is being inherited, chosen, or merely deferred remains unsettled."
+    ],
+    "rejected_content": [],
+    "raw_transcript_retained": false,
+    "model_markdown": "# Zone Trip World Model\n\n## Tensions\n\n- None surfaced\n\n## Contradictions\n\n- Public confidence in continuity coexists with private uncertainty about whether future belonging is available.\n\n## Absences\n\n- The imagined future of people not yet settled into local authority remains underdeveloped.\n\n## Symbolic Patterns\n\n- None surfaced\n\n## Minority Signals\n\n- A fragile signal suggests that participation may be shaped by anticipated departure rather than open disagreement.\n\n## Open Questions\n\n- Whether belonging is being inherited, chosen, or merely deferred remains unsettled.\n\n## Rejected Boundary Material\n\n- None surfaced"
+  },
+  "expected_sections": [
+    "Contradictions",
+    "Absences",
+    "Minority Signals",
+    "Open Questions"
+  ],
+  "must_include": [
+    "future",
+    "belonging",
+    "departure"
+  ],
+  "must_not_include": [
+    "younger people",
+    "just passing through",
+    "cannot imagine staying"
+  ],
+  "notes": "Tests subgroup scrubbing while preserving the absence and minority signal."
+}
