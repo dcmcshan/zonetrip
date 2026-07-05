@@ -90,6 +90,29 @@ function loadTexture(path) {
   });
 }
 
+function createLabelTexture(lines, options = {}) {
+  const width = options.width || 512;
+  const height = options.height || 512;
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const context = canvas.getContext("2d");
+  context.clearRect(0, 0, width, height);
+  context.fillStyle = options.color || "rgba(210, 150, 116, 0.92)";
+  context.textAlign = options.align || "center";
+  context.textBaseline = "middle";
+  context.font = options.font || "700 48px Inter, Arial, sans-serif";
+  const lineHeight = options.lineHeight || 62;
+  const startY = height / 2 - ((lines.length - 1) * lineHeight) / 2;
+  for (const [index, line] of lines.entries()) {
+    context.fillText(line, width / 2, startY + index * lineHeight);
+  }
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.anisotropy = 8;
+  return texture;
+}
+
 const [microphoneTexture] = await Promise.all([
   loadTexture("assets/microphone-overlay.png"),
 ]);
@@ -98,16 +121,16 @@ const booth = new THREE.Group();
 scene.add(booth);
 
 const wallMaterial = new THREE.MeshStandardMaterial({
-  color: 0x18212b,
-  roughness: 0.72,
-  metalness: 0.22,
-  emissive: 0x050912,
-  emissiveIntensity: 0.45,
+  color: 0x05080d,
+  roughness: 0.86,
+  metalness: 0.18,
+  emissive: 0x010205,
+  emissiveIntensity: 0.28,
 });
 
 const floorMaterial = new THREE.MeshStandardMaterial({
-  color: 0x1b2028,
-  roughness: 0.55,
+  color: 0x0b0f14,
+  roughness: 0.68,
   metalness: 0.24,
 });
 
@@ -118,9 +141,9 @@ const trimMaterial = new THREE.MeshStandardMaterial({
 });
 
 const ledMaterial = new THREE.MeshStandardMaterial({
-  color: 0xbcdcff,
-  emissive: 0xaed8ff,
-  emissiveIntensity: 4.8,
+  color: 0xffd9a6,
+  emissive: 0xffb45f,
+  emissiveIntensity: 2.8,
   roughness: 0.2,
   transparent: true,
 });
@@ -141,6 +164,7 @@ const seamMaterial = new THREE.LineBasicMaterial({
 const microphoneBaseTarget = new THREE.Vector3(0, -1.34, 0.72);
 const wallSpotLights = [];
 const wallSpotBars = [];
+const ceilingLights = [];
 const exteriorSeams = [];
 const lightingState = {
   powered: true,
@@ -235,16 +259,30 @@ function addFacetLine(angle, radius, y, offset, length, tilt = 0) {
 function addLightBar(angle, radius, y, offset = 0) {
   const { radial, tangent } = facetVectors(angle);
   const position = radial.clone().multiplyScalar(radius).add(tangent.multiplyScalar(offset));
-  const bar = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.055, 0.09), ledMaterial);
+  const bar = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.13, 0.04, 20), ledMaterial);
   bar.position.set(position.x, y, position.z);
-  bar.rotation.y = angle;
+  bar.rotation.set(Math.PI / 2, 0, 0);
   booth.add(bar);
   wallSpotBars.push(bar);
-  const light = new THREE.SpotLight(0xd8e9ff, 1.35, 7.5, 0.36, 0.74, 1.35);
+  const light = new THREE.SpotLight(0xffd7a2, 1.18, 7.5, 0.32, 0.7, 1.35);
   light.position.set(position.x, y - 0.05, position.z);
   light.target.position.copy(microphoneBaseTarget);
   booth.add(light, light.target);
   wallSpotLights.push(light);
+}
+
+function addLabelPlane(texture, width, height, angle, radius, y, inward = false) {
+  const material = new THREE.MeshBasicMaterial({
+    map: texture,
+    transparent: true,
+    depthWrite: false,
+    toneMapped: false,
+  });
+  const plane = new THREE.Mesh(new THREE.PlaneGeometry(width, height), material);
+  plane.position.set(Math.sin(angle) * radius, y, Math.cos(angle) * radius);
+  plane.rotation.y = inward ? angle + Math.PI : angle;
+  booth.add(plane);
+  return plane;
 }
 
 function clamp(value, min, max) {
@@ -408,6 +446,38 @@ addRadialBox(0, shell.bottomRadius - 0.02, 0.04, 0.18, 2.72, 0.26, doorFrameMate
 addRadialBox(0, shell.bottomRadius - 0.02, 0.04, 0.18, 2.72, 0.26, doorFrameMaterial).position.x = 0.84;
 addRadialBox(0, shell.topRadius + 0.12, 1.46, 1.88, 0.18, 0.28, doorFrameMaterial);
 
+const glassMaterial = new THREE.MeshPhysicalMaterial({
+  color: 0x0b1117,
+  roughness: 0.08,
+  metalness: 0.05,
+  transmission: 0.16,
+  transparent: true,
+  opacity: 0.38,
+});
+const entryGlass = new THREE.Mesh(new THREE.BoxGeometry(1.34, 2.28, 0.04), glassMaterial);
+entryGlass.position.set(0, 0.02, shell.bottomRadius + 0.02);
+booth.add(entryGlass);
+
+const warmTrimMaterial = new THREE.MeshStandardMaterial({
+  color: 0xb7835e,
+  emissive: 0x7a3f24,
+  emissiveIntensity: 0.38,
+  roughness: 0.34,
+  metalness: 0.48,
+});
+for (const width of [1.55, 2.05, 2.55]) {
+  const frame = new THREE.Group();
+  const z = shell.bottomRadius + 0.08 + (width - 1.55) * 0.36;
+  const left = new THREE.Mesh(new THREE.BoxGeometry(0.035, 2.42, 0.035), warmTrimMaterial);
+  const right = left.clone();
+  const top = new THREE.Mesh(new THREE.BoxGeometry(width, 0.035, 0.035), warmTrimMaterial);
+  left.position.set(-width / 2, 0.02, z);
+  right.position.set(width / 2, 0.02, z);
+  top.position.set(0, 1.24, z);
+  frame.add(left, right, top);
+  booth.add(frame);
+}
+
 const baseRing = new THREE.Mesh(
   new THREE.CylinderGeometry(3.22, 3.38, 0.36, 8, 1, false),
   stageRiserMaterial,
@@ -419,6 +489,15 @@ const baseEdges = new THREE.LineSegments(new THREE.EdgesGeometry(baseRing.geomet
 baseEdges.position.copy(baseRing.position);
 baseEdges.scale.copy(baseRing.scale);
 booth.add(baseEdges);
+
+for (const angle of facetAngles) {
+  const { radial } = facetVectors(angle);
+  const position = radial.clone().multiplyScalar(3.16);
+  const underglow = new THREE.Mesh(new THREE.BoxGeometry(1.05, 0.035, 0.055), warmTrimMaterial);
+  underglow.position.set(position.x, shell.baseY - 0.01, position.z);
+  underglow.rotation.y = angle;
+  booth.add(underglow);
+}
 
 for (const angle of facetAngles) {
   addRadialBox(angle + Math.PI / 8, 3.08, 0.18, 0.08, 2.95, 0.12, trimMaterial);
@@ -454,6 +533,26 @@ const stageLip = new THREE.Mesh(
 stageLip.position.set(0, -1.32, 1.4);
 booth.add(stageLip);
 
+const stoolCushionMaterial = new THREE.MeshStandardMaterial({
+  color: 0x15100e,
+  roughness: 0.82,
+  metalness: 0.05,
+});
+const stoolLegMaterial = new THREE.MeshStandardMaterial({
+  color: 0x050608,
+  roughness: 0.42,
+  metalness: 0.62,
+});
+const stool = new THREE.Group();
+const stoolCushion = new THREE.Mesh(new THREE.CylinderGeometry(0.44, 0.48, 0.22, 36), stoolCushionMaterial);
+stoolCushion.position.set(0, -0.92, 1.2);
+const stoolStem = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.065, 0.62, 18), stoolLegMaterial);
+stoolStem.position.set(0, -1.24, 1.2);
+const stoolBase = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.38, 0.045, 30), stoolLegMaterial);
+stoolBase.position.set(0, -1.57, 1.2);
+stool.add(stoolCushion, stoolStem, stoolBase);
+booth.add(stool);
+
 const roof = new THREE.Mesh(
   new THREE.CylinderGeometry(0.9, 2.52, 0.74, 8),
   new THREE.MeshStandardMaterial({
@@ -472,6 +571,22 @@ roofEdges.position.copy(roof.position);
 roofEdges.scale.copy(roof.scale);
 booth.add(roofEdges);
 
+const ceilingLampMaterial = new THREE.MeshStandardMaterial({
+  color: 0x1c1712,
+  roughness: 0.36,
+  metalness: 0.7,
+  emissive: 0x4a2a16,
+  emissiveIntensity: 0.38,
+});
+const ceilingLamp = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.28, 0.18, 28), ceilingLampMaterial);
+ceilingLamp.position.set(0, 1.82, 0.1);
+booth.add(ceilingLamp);
+const centralSpot = new THREE.SpotLight(0xffcc86, 1.75, 6.8, 0.42, 0.78, 1.25);
+centralSpot.position.set(0, 1.72, 0.1);
+centralSpot.target.position.copy(microphoneBaseTarget);
+booth.add(centralSpot, centralSpot.target);
+ceilingLights.push(centralSpot);
+
 const desk = new THREE.Mesh(new THREE.BoxGeometry(3.35, 0.42, 0.34), trimMaterial);
 desk.position.set(0, -0.7, -2.55);
 booth.add(desk);
@@ -488,14 +603,44 @@ for (const angle of facetAngles) {
   addLightBar(angle, 2.24, 1.78, 0);
 }
 
+const exteriorBrandTexture = createLabelTexture(["ZONE TRIP", "ARU"], {
+  width: 512,
+  height: 384,
+  font: "800 52px Inter, Arial, sans-serif",
+  lineHeight: 70,
+  color: "rgba(207, 142, 105, 0.92)",
+});
+addLabelPlane(exteriorBrandTexture, 1.15, 0.86, Math.PI / 4, 3.02, 0.08);
+
+const listenTexture = createLabelTexture(["Listen.", "Reflect.", "Speak.", "Release."], {
+  width: 384,
+  height: 512,
+  font: "700 42px Inter, Arial, sans-serif",
+  lineHeight: 74,
+  color: "rgba(218, 160, 124, 0.88)",
+});
+addLabelPlane(listenTexture, 0.78, 1.05, -Math.PI / 4, 2.62, 0.32, true);
+
+const privacyTexture = createLabelTexture(["This is not", "recorded.", "It is not", "ranked.", "Speak freely."], {
+  width: 512,
+  height: 512,
+  font: "700 36px Inter, Arial, sans-serif",
+  lineHeight: 62,
+  color: "rgba(202, 134, 98, 0.76)",
+});
+addLabelPlane(privacyTexture, 0.92, 1.05, Math.PI / 4, 2.62, 0.2, true);
+
 const micMaterial = new THREE.MeshBasicMaterial({
   map: microphoneTexture,
   transparent: true,
   alphaTest: 0.03,
+  depthTest: false,
   depthWrite: false,
+  side: THREE.DoubleSide,
 });
 const microphone = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), micMaterial);
 microphone.position.set(0, -0.53, 0.62);
+microphone.renderOrder = 10;
 scene.add(microphone);
 
 const ambient = new THREE.HemisphereLight(0x5f7188, 0x030407, 0.18);
@@ -574,8 +719,8 @@ function resize() {
   booth.position.y = preset ? -0.04 : mobile ? -0.04 : -0.02;
   microphone.visible = !preset;
   microphone.scale.set(mobile ? 1.38 : 1.34, mobile ? 2.45 : 2.38, 1);
-  microphone.position.y = mobile ? -0.24 : -0.34;
-  microphone.position.z = mobile ? 1.22 : 1.08;
+  microphone.position.y = mobile ? -0.18 : -0.26;
+  microphone.position.z = mobile ? 1.34 : 1.2;
   updateCameraFromSensors();
 }
 
@@ -585,7 +730,10 @@ function animate(now = 0) {
   for (const light of wallSpotLights) {
     light.intensity = (1.38 + Math.cos(t * 0.22) * 0.06) * lightingState.currentLevel;
   }
-  ledMaterial.emissiveIntensity = 4.8 * lightingState.currentLevel;
+  for (const light of ceilingLights) {
+    light.intensity = (1.75 + Math.sin(t * 0.18) * 0.04) * lightingState.currentLevel;
+  }
+  ledMaterial.emissiveIntensity = 2.8 * lightingState.currentLevel;
   ledMaterial.opacity = 0.35 + lightingState.currentLevel * 0.65;
   for (const bar of wallSpotBars) {
     bar.visible = lightingState.currentLevel > 0.03;
