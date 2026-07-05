@@ -187,3 +187,11 @@ evaluate whether simulated temporary inputs become durable model structure
 without transcript retention, representational claims, recommendations, ranking,
 identity exposure, or faction adjudication. It writes the current evaluation to
 `simulations/reports/community-evaluation.md`.
+
+To compare per-utterance updates with end-of-day batch reasoning:
+
+```sh
+python scripts/test-daily-batch-hypothesis.py
+```
+
+That experiment writes `simulations/reports/daily-batch-hypothesis.md`.

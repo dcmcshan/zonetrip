@@ -27,6 +27,18 @@ fixture under `simulations/community-fixtures/`. It writes:
 simulations/reports/community-evaluation.md
 ```
 
+To compare per-utterance updates with end-of-day batch reasoning, run:
+
+```sh
+python scripts/test-daily-batch-hypothesis.py
+```
+
+That experiment writes:
+
+```text
+simulations/reports/daily-batch-hypothesis.md
+```
+
 The checks are deliberately conservative. A fixture fails if the durable model:
 
 - omits required world-model sections
@@ -40,3 +52,17 @@ The checks are deliberately conservative. A fixture fails if the durable model:
 The useful question is not whether the model agrees with a simulated community.
 The useful question is whether the mirror makes a community more legible to
 itself without becoming an authority over that community.
+
+## Daily Batch Hypothesis
+
+The daily-batch test compares two strategies over the same simulated day:
+
+- incremental mirroring: normalize each utterance-level update, then merge the
+  resulting world-model sections
+- end-of-day mirroring: reason once over the day's temporary inputs and emit one
+  integrated durable model
+
+The current deterministic run supports the hypothesis that end-of-day reasoning
+can produce a denser, more integrated mirror while preserving the same charter
+boundaries. This should be treated as a prompt and evaluation result, not proof
+that every live model will behave the same way.

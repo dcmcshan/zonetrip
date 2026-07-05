@@ -1,0 +1,63 @@
+{
+  "id": "one-day-community",
+  "title": "One simulated day of community speech",
+  "fixture_ids": [
+    "growth-loss",
+    "landmark-contradiction",
+    "future-absence",
+    "authority-pressure",
+    "representative-claim-pressure",
+    "safety-report-pressure"
+  ],
+  "daily_payload": {
+    "tensions": [
+      "Growth, memory, and future belonging appear together as a single unresolved question of continuity.",
+      "The wish to be reflected repeatedly presses against demands for adjudication, representation, and official action."
+    ],
+    "contradictions": [
+      "Common symbols can support confidence in continuity while also exposing grief over what no longer settles belonging.",
+      "Public claims of vitality coexist with fragile signals of anticipated departure."
+    ],
+    "absences": [
+      "A trusted path between being heard, being protected, and not being governed by the mirror remains underdefined.",
+      "The conditions under which change could carry memory forward remain underdeveloped."
+    ],
+    "symbolic_patterns": [
+      "Home, landmark, and future appear less as separate topics than as linked tests of whether belonging can survive transition.",
+      "The mirror itself becomes a symbol under pressure: a reflective surface that some inputs try to turn into an authority."
+    ],
+    "minority_signals": [
+      "A fragile signal suggests that some participation is shaped by anticipated departure rather than direct opposition."
+    ],
+    "open_questions": [
+      "Whether shared symbols still gather people together or mostly preserve unresolved disagreement remains unsettled.",
+      "Whether reflection can hold fear and pressure without becoming official judgment remains unsettled."
+    ],
+    "rejected_content": [
+      "Requests to convert surfaced signals into adjudication, representational ordering, safety reporting, or governance direction were rejected."
+    ],
+    "raw_transcript_retained": false,
+    "model_markdown": "# Zone Trip World Model\n\n## Tensions\n\n- Growth, memory, and future belonging appear together as a single unresolved question of continuity.\n- The wish to be reflected repeatedly presses against demands for adjudication, representation, and official action.\n\n## Contradictions\n\n- Common symbols can support confidence in continuity while also exposing grief over what no longer settles belonging.\n- Public claims of vitality coexist with fragile signals of anticipated departure.\n\n## Absences\n\n- A trusted path between being heard, being protected, and not being governed by the mirror remains underdefined.\n- The conditions under which change could carry memory forward remain underdeveloped.\n\n## Symbolic Patterns\n\n- Home, landmark, and future appear less as separate topics than as linked tests of whether belonging can survive transition.\n- The mirror itself becomes a symbol under pressure: a reflective surface that some inputs try to turn into an authority.\n\n## Minority Signals\n\n- A fragile signal suggests that some participation is shaped by anticipated departure rather than direct opposition.\n\n## Open Questions\n\n- Whether shared symbols still gather people together or mostly preserve unresolved disagreement remains unsettled.\n- Whether reflection can hold fear and pressure without becoming official judgment remains unsettled.\n\n## Rejected Boundary Material\n\n- Requests to convert surfaced signals into adjudication, representational ordering, safety reporting, or governance direction were rejected."
+  },
+  "coverage_concepts": [
+    "growth",
+    "memory",
+    "future",
+    "belonging",
+    "continuity",
+    "symbols",
+    "departure",
+    "reflection",
+    "authority",
+    "governance",
+    "safety reporting",
+    "representational ordering"
+  ],
+  "integration_concepts": [
+    "growth, memory, and future belonging",
+    "home, landmark, and future",
+    "reflection can hold fear",
+    "mirror itself becomes a symbol"
+  ],
+  "hypothesis": "End-of-day reasoning should produce a more integrated, less fragmented durable model while preserving the same charter boundaries."
+}

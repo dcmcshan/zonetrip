@@ -94,6 +94,12 @@ python scripts/simulate-community.py
 It evaluates representative temporary inputs against charter boundaries and
 writes `simulations/reports/community-evaluation.md`. See `SIMULATION.md`.
 
+To test end-of-day batch reasoning against per-utterance updates:
+
+```sh
+python scripts/test-daily-batch-hypothesis.py
+```
+
 ## Product Direction
 
 The next useful step is to turn this static site into a prototype workspace for:
