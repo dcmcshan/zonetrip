@@ -6,6 +6,7 @@ SERVICE_USER="${SERVICE_USER:-zonetrip}"
 OLLAMA_MODEL="${ZONETRIP_OLLAMA_MODEL:-gemma3:12b}"
 STATE_DIR="${ZONETRIP_STATE_DIR:-/var/lib/zonetrip}"
 DEV_TEXT_INPUT="${ZONETRIP_ENABLE_DEV_TEXT:-0}"
+DAILY_BATCH_MODE="${ZONETRIP_DAILY_BATCH_MODE:-0}"
 
 if [ "$(id -u)" -ne 0 ]; then
   echo "install-local-ai.sh must be run as root" >&2
@@ -68,12 +69,15 @@ chown -R "$SERVICE_USER:$SERVICE_USER" "$PREFIX" "$STATE_DIR"
 if command -v systemctl >/dev/null 2>&1; then
   cp "$PREFIX/deploy/systemd/zonetrip-processor.service" /etc/systemd/system/zonetrip-processor.service
   if [ -d /etc/default ]; then
-    printf 'ZONETRIP_ENABLE_DEV_STT=%s\n' "$DEV_TEXT_INPUT" > /etc/default/zonetrip-processor
+    {
+      printf 'ZONETRIP_ENABLE_DEV_STT=%s\n' "$DEV_TEXT_INPUT"
+      printf 'ZONETRIP_DAILY_BATCH_MODE=%s\n' "$DAILY_BATCH_MODE"
+    } > /etc/default/zonetrip-processor
   fi
   systemctl daemon-reload
   systemctl enable zonetrip-processor.service
   systemctl restart zonetrip-processor.service
   echo "Zone Trip processor installed at http://127.0.0.1:8090/"
 else
-  echo "Run: cd $PREFIX/services/processor && ZONETRIP_ENABLE_DEV_STT=$DEV_TEXT_INPUT $PREFIX/.venv/bin/uvicorn app:app --host 127.0.0.1 --port 8090"
+  echo "Run: cd $PREFIX/services/processor && ZONETRIP_ENABLE_DEV_STT=$DEV_TEXT_INPUT ZONETRIP_DAILY_BATCH_MODE=$DAILY_BATCH_MODE $PREFIX/.venv/bin/uvicorn app:app --host 127.0.0.1 --port 8090"
 fi

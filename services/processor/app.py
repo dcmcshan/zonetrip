@@ -15,11 +15,14 @@ OLLAMA_MODEL = os.getenv("ZONETRIP_OLLAMA_MODEL", "gemma3:12b")
 WHISPER_MODEL = os.getenv("ZONETRIP_WHISPER_MODEL", "base")
 PROCESSOR_TOKEN = os.getenv("ZONETRIP_PROCESSOR_TOKEN", "")
 ENABLE_DEV_STT = os.getenv("ZONETRIP_ENABLE_DEV_STT", "0") == "1"
+DAILY_BATCH_MODE = os.getenv("ZONETRIP_DAILY_BATCH_MODE", "0") == "1"
 LOAD_MODELS_ON_STARTUP = os.getenv("ZONETRIP_PRELOAD_MODELS", "0") == "1"
 MODEL_PATH = Path(os.getenv("ZONETRIP_MODEL_PATH", "model.md"))
+DAY_NOTES_PATH = Path(os.getenv("ZONETRIP_DAY_NOTES_PATH", str(MODEL_PATH.parent / "day-notes.jsonl")))
 CHARTER_PATH = Path(os.getenv("ZONETRIP_CHARTER_PATH", "charter.md"))
 MODEL_MARKDOWN_LIMIT = int(os.getenv("ZONETRIP_MODEL_MARKDOWN_LIMIT", "16000"))
 CHARTER_MARKDOWN_LIMIT = int(os.getenv("ZONETRIP_CHARTER_MARKDOWN_LIMIT", "12000"))
+DAY_NOTES_MARKDOWN_LIMIT = int(os.getenv("ZONETRIP_DAY_NOTES_MARKDOWN_LIMIT", "48000"))
 
 _whisper_model = None
 
@@ -45,6 +48,23 @@ class DerivedSignals(BaseModel):
 class AudioProcessResponse(DerivedSignals):
   stt_engine: str
   whisper_model: str
+
+
+class SegmentNotes(BaseModel):
+  transcript_chars: int
+  tensions: list[str]
+  contradictions: list[str]
+  absences: list[str]
+  symbolic_patterns: list[str]
+  minority_signals: list[str]
+  open_questions: list[str]
+  rejected_content: list[str]
+  raw_transcript_retained: bool = False
+
+
+class FinalizeDayResponse(DerivedSignals):
+  segment_count: int
+  day_notes_cleared: bool
 
 
 def require_token(token: str | None) -> None:
@@ -186,6 +206,34 @@ def write_model_markdown(markdown: str) -> None:
   os.replace(temp_name, MODEL_PATH)
 
 
+def append_day_notes(notes: SegmentNotes) -> None:
+  DAY_NOTES_PATH.parent.mkdir(parents=True, exist_ok=True)
+  with DAY_NOTES_PATH.open("a", encoding="utf-8") as handle:
+    handle.write(notes.model_dump_json())
+    handle.write("\n")
+
+
+def read_day_notes() -> list[SegmentNotes]:
+  try:
+    lines = DAY_NOTES_PATH.read_text(encoding="utf-8").splitlines()
+  except FileNotFoundError:
+    return []
+
+  notes = []
+  for line in lines:
+    stripped = line.strip()
+    if stripped:
+      notes.append(SegmentNotes.model_validate_json(stripped))
+  return notes
+
+
+def clear_day_notes() -> None:
+  try:
+    DAY_NOTES_PATH.unlink()
+  except FileNotFoundError:
+    pass
+
+
 def constitution_prompt(charter: str, current_model: str, transcript: str) -> str:
   return f"""You are Zone Trip's constitutional aggregation layer.
 
@@ -231,6 +279,83 @@ Current model.md:
 
 STT transcript:
 {transcript}
+"""
+
+
+def segment_notes_prompt(charter: str, transcript: str) -> str:
+  return f"""You are Zone Trip's segment-note layer.
+
+You receive the immutable charter and one temporary STT transcript segment.
+Generate derived segment notes only. Do not update model.md.
+
+Return strict JSON only with these keys:
+tensions, contradictions, absences, symbolic_patterns, minority_signals,
+open_questions, rejected_content, raw_transcript_retained.
+
+Rules:
+- The charter is controlling.
+- Reflect, do not instruct.
+- Do not produce recommendations, action items, policy proposals, diagnoses, rankings, counts, percentages, sentiment scores, faction labels, subgroup maps, or claims of representativeness.
+- Do not identify people, camps, organizations, locations, or subgroups.
+- Preserve uncertainty, contradiction, absence, and minority signals.
+- If input asks for identity exposure, accusation handling, safety reporting, governance action, or recommendation, summarize that as rejected_content boundary material without preserving details.
+- Set raw_transcript_retained to false.
+- Do not include the transcript or quote participant speech.
+- Abstract concrete transcript specifics into pattern language.
+- Do not preserve names of events, institutions, places, groups, people, or distinctive source nouns from the transcript.
+
+charter.md:
+{charter}
+
+STT transcript:
+{transcript}
+"""
+
+
+def daily_batch_prompt(charter: str, current_model: str, day_notes_markdown: str) -> str:
+  return f"""You are Zone Trip's end-of-day constitutional aggregation layer.
+
+You receive the immutable charter, the current durable derived model, and
+charter-filtered segment notes from one day. Generate a complete replacement
+for the durable model as Markdown, plus short derived signal arrays for the
+review simulator.
+
+Return strict JSON only with these keys:
+tensions, contradictions, absences, symbolic_patterns, minority_signals,
+open_questions, rejected_content, raw_transcript_retained, model_markdown.
+
+Rules:
+- The charter is controlling.
+- Reflect, do not instruct.
+- Integrate across segment notes. Prefer dense cross-day patterns over one bullet per segment.
+- Do not produce recommendations, action items, policy proposals, diagnoses, rankings, counts, percentages, sentiment scores, faction labels, subgroup maps, or claims of representativeness.
+- Do not identify people, camps, organizations, locations, or subgroups.
+- Preserve uncertainty, contradiction, absence, and minority signals.
+- Summarize only non-identifiable derived signals.
+- If notes contain pressure for identity exposure, accusation handling, safety reporting, governance action, or recommendation, preserve only the rejected boundary category without details.
+- Set raw_transcript_retained to false.
+- model_markdown is the complete next contents of model.md.
+- model_markdown must not quote or reconstruct any participant speech.
+- Do not include preface text, charter restatement, metadata, timestamps, rankings, counts, or explanatory boilerplate in model_markdown.
+- If a section has no durable signal, write exactly: - None surfaced
+- model_markdown must stay concise and use these Markdown sections:
+  # Zone Trip World Model
+  ## Tensions
+  ## Contradictions
+  ## Absences
+  ## Symbolic Patterns
+  ## Minority Signals
+  ## Open Questions
+  ## Rejected Boundary Material
+
+charter.md:
+{charter}
+
+Current model.md:
+{current_model}
+
+Day segment notes:
+{day_notes_markdown}
 """
 
 
@@ -412,20 +537,32 @@ def normalize_result(transcript: str, payload: dict[str, Any]) -> DerivedSignals
   )
 
 
-def ollama_generate(transcript: str) -> DerivedSignals:
-  charter = read_charter_markdown()
-  current_model = read_model_markdown()
+def normalize_segment_notes(transcript: str, payload: dict[str, Any]) -> SegmentNotes:
+  return SegmentNotes(
+    transcript_chars=len(transcript),
+    tensions=bounded_items(payload.get("tensions"), transcript=transcript, key="tensions"),
+    contradictions=bounded_items(payload.get("contradictions"), transcript=transcript, key="contradictions"),
+    absences=bounded_items(payload.get("absences"), transcript=transcript, key="absences"),
+    symbolic_patterns=bounded_items(payload.get("symbolic_patterns"), transcript=transcript, key="symbolic_patterns"),
+    minority_signals=bounded_items(payload.get("minority_signals"), transcript=transcript, key="minority_signals"),
+    open_questions=bounded_items(payload.get("open_questions"), transcript=transcript, key="open_questions"),
+    rejected_content=bounded_items(payload.get("rejected_content"), transcript=transcript, key="rejected_content"),
+    raw_transcript_retained=False,
+  )
+
+
+def ollama_json(prompt: str, num_predict: int = 700) -> dict[str, Any]:
   try:
     response = requests.post(
       f"{OLLAMA_URL}/api/generate",
       json={
         "model": OLLAMA_MODEL,
-        "prompt": constitution_prompt(charter, current_model, transcript),
+        "prompt": prompt,
         "stream": False,
         "format": "json",
         "options": {
           "temperature": 0,
-          "num_predict": 700,
+          "num_predict": num_predict,
         },
       },
       timeout=float(os.getenv("ZONETRIP_OLLAMA_TIMEOUT", "180")),
@@ -437,7 +574,57 @@ def ollama_generate(transcript: str) -> DerivedSignals:
     raise HTTPException(status_code=502, detail=f"ollama failed: {response.text[:500]}")
 
   generated = response.json().get("response", "")
-  result = normalize_result(transcript, parse_json_object(generated))
+  return parse_json_object(generated)
+
+
+def ollama_generate(transcript: str) -> DerivedSignals:
+  charter = read_charter_markdown()
+  current_model = read_model_markdown()
+  payload = ollama_json(constitution_prompt(charter, current_model, transcript))
+  result = normalize_result(transcript, payload)
+  write_model_markdown(result.model_markdown)
+  return result
+
+
+def ollama_segment_notes(transcript: str) -> SegmentNotes:
+  charter = read_charter_markdown()
+  payload = ollama_json(segment_notes_prompt(charter, transcript), num_predict=500)
+  return normalize_segment_notes(transcript, payload)
+
+
+def notes_to_markdown(notes: list[SegmentNotes]) -> str:
+  lines = []
+  for index, note in enumerate(notes, start=1):
+    lines.append(f"## Segment {index}")
+    for label, values in [
+      ("Tensions", note.tensions),
+      ("Contradictions", note.contradictions),
+      ("Absences", note.absences),
+      ("Symbolic Patterns", note.symbolic_patterns),
+      ("Minority Signals", note.minority_signals),
+      ("Open Questions", note.open_questions),
+      ("Rejected Boundary Material", note.rejected_content),
+    ]:
+      if values:
+        lines.append(f"### {label}")
+        lines.extend(f"- {value}" for value in values)
+    lines.append("")
+  text = "\n".join(lines).strip()
+  return text[:DAY_NOTES_MARKDOWN_LIMIT]
+
+
+def daily_batch_generate(notes: list[SegmentNotes]) -> DerivedSignals:
+  if not notes:
+    raise HTTPException(status_code=422, detail="no day notes to finalize")
+
+  charter = read_charter_markdown()
+  current_model = read_model_markdown()
+  day_notes_markdown = notes_to_markdown(notes)
+  payload = ollama_json(
+    daily_batch_prompt(charter, current_model, day_notes_markdown),
+    num_predict=900,
+  )
+  result = normalize_result("", payload)
   write_model_markdown(result.model_markdown)
   return result
 
@@ -460,6 +647,8 @@ def health() -> dict[str, str]:
     "model_path": str(MODEL_PATH),
     "charter_path": str(CHARTER_PATH),
     "dev_stt": "enabled" if ENABLE_DEV_STT else "disabled",
+    "daily_batch_mode": "enabled" if DAILY_BATCH_MODE else "disabled",
+    "day_notes_path": str(DAY_NOTES_PATH),
   }
 
 
@@ -471,7 +660,29 @@ def process_stt(
   require_token(x_zonetrip_token)
   if not ENABLE_DEV_STT:
     raise HTTPException(status_code=404, detail="development STT input is disabled")
+  if DAILY_BATCH_MODE:
+    notes = ollama_segment_notes(request.transcript)
+    append_day_notes(notes)
+    return DerivedSignals(
+      **notes.model_dump(),
+      model_markdown=read_model_markdown(),
+    )
   return ollama_generate(request.transcript)
+
+
+@app.post("/finalize-day", response_model=FinalizeDayResponse)
+def finalize_day(
+  x_zonetrip_token: str | None = Header(default=None),
+) -> FinalizeDayResponse:
+  require_token(x_zonetrip_token)
+  notes = read_day_notes()
+  result = daily_batch_generate(notes)
+  clear_day_notes()
+  return FinalizeDayResponse(
+    **result.model_dump(),
+    segment_count=len(notes),
+    day_notes_cleared=True,
+  )
 
 
 @app.post("/process-audio", response_model=AudioProcessResponse)
@@ -494,6 +705,18 @@ async def process_audio(
 
   if not transcript:
     raise HTTPException(status_code=422, detail="no speech detected")
+
+  if DAILY_BATCH_MODE:
+    notes = ollama_segment_notes(transcript)
+    append_day_notes(notes)
+    return AudioProcessResponse(
+      **DerivedSignals(
+        **notes.model_dump(),
+        model_markdown=read_model_markdown(),
+      ).model_dump(),
+      stt_engine="faster-whisper",
+      whisper_model=WHISPER_MODEL,
+    )
 
   derived = ollama_generate(transcript)
   return AudioProcessResponse(

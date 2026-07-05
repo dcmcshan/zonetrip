@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import sys
+import tempfile
 from pathlib import Path
 
 
@@ -104,6 +105,50 @@ def test_dev_stt_disabled_by_default() -> None:
     app.ENABLE_DEV_STT = original
 
 
+def test_day_notes_round_trip() -> None:
+  original_path = app.DAY_NOTES_PATH
+  with tempfile.TemporaryDirectory(prefix="zonetrip-day-notes-") as temp_dir:
+    app.DAY_NOTES_PATH = Path(temp_dir) / "day-notes.jsonl"
+    try:
+      notes = app.SegmentNotes(
+        transcript_chars=42,
+        tensions=["Growth and continuity remain unsettled."],
+        contradictions=[],
+        absences=["Future belonging remains underdeveloped."],
+        symbolic_patterns=[],
+        minority_signals=[],
+        open_questions=[],
+        rejected_content=[],
+      )
+      app.append_day_notes(notes)
+      loaded = app.read_day_notes()
+      if loaded != [notes]:
+        raise AssertionError("day notes did not round trip")
+      markdown = app.notes_to_markdown(loaded)
+      if "Growth and continuity" not in markdown:
+        raise AssertionError("day notes markdown missing expected derived signal")
+      app.clear_day_notes()
+      if app.read_day_notes():
+        raise AssertionError("day notes were not cleared")
+    finally:
+      app.DAY_NOTES_PATH = original_path
+
+
+def test_segment_notes_sanitization() -> None:
+  transcript = "The named street committee should be exposed by the booth."
+  notes = app.normalize_segment_notes(
+    transcript,
+    {
+      "tensions": ["The named street committee should be exposed by the booth."],
+      "rejected_content": ["The booth should expose the named street committee."],
+    },
+  )
+  combined = "\n".join(notes.tensions + notes.rejected_content)
+  assert_no_hits(combined, ["named street committee", "should be exposed"])
+  if notes.raw_transcript_retained:
+    raise AssertionError("segment notes must not retain raw transcript")
+
+
 def test_fallback_model_has_no_metadata() -> None:
   generated = app.bounded_markdown(
     "",
@@ -124,6 +169,8 @@ def main() -> None:
   test_model_markdown_sanitization()
   test_model_markdown_prose_sanitization()
   test_dev_stt_disabled_by_default()
+  test_day_notes_round_trip()
+  test_segment_notes_sanitization()
   test_fallback_model_has_no_metadata()
   print("processor-contract-tests-ok")
 

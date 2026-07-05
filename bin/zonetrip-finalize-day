@@ -1,0 +1,7 @@
+#!/usr/bin/env sh
+set -eu
+
+ENDPOINT="${ZONETRIP_FINALIZE_ENDPOINT:-http://127.0.0.1:8090/finalize-day}"
+
+curl -fsS \
+  -X POST "$ENDPOINT"

@@ -94,18 +94,65 @@
             <p>The processor reads immutable <code>charter.md</code> and current <code>model.md</code>.</p>
           </li>
           <li>
-            <h3>Generate</h3>
-            <p>The LLM returns derived signals plus a complete replacement <code>model.md</code>.</p>
+            <h3>Derive notes</h3>
+            <p>The LLM converts the segment into charter-filtered notes. Raw STT is not written.</p>
           </li>
           <li>
-            <h3>Persist</h3>
-            <p>The processor atomically writes only the derived world model.</p>
+            <h3>Finalize day</h3>
+            <p><code>/finalize-day</code> integrates the day notes into one replacement <code>model.md</code>.</p>
           </li>
           <li>
             <h3>Discard</h3>
-            <p>Temporary audio and transcript buffers die with the request.</p>
+            <p>Temporary audio and transcript buffers die with the request; day notes are cleared after finalization.</p>
           </li>
         </ol>
+      </section>
+
+      <section class="architecture-map" aria-labelledby="daily-title">
+        <div class="section-intro">
+          <p class="eyebrow">Daily batch mirror</p>
+          <h2 id="daily-title">Reason once over derived notes, not a raw day transcript.</h2>
+          <p>
+            The configured local model is <code>gemma3:12b</code>, which has a
+            nominal long context window. The booth still should not save or
+            reason over a full raw day transcript. In daily batch mode, each
+            utterance becomes charter-filtered segment notes; the end-of-day
+            pass integrates those notes into <code>model.md</code> and clears
+            the intermediate file.
+          </p>
+        </div>
+
+        <div class="architecture-columns">
+          <article class="info-card">
+            <p class="card-kicker">During the day</p>
+            <h3>Segment notes</h3>
+            <p>
+              Speech becomes temporary STT, then derived notes for tensions,
+              contradictions, absences, patterns, minority signals, questions,
+              and rejected boundary pressure.
+            </p>
+          </article>
+
+          <article class="info-card">
+            <p class="card-kicker">End of day</p>
+            <h3>Integrated model</h3>
+            <p>
+              The processor reads <code>charter.md</code>, current
+              <code>model.md</code>, and day notes, then writes one replacement
+              model rather than a chain of per-turn summaries.
+            </p>
+          </article>
+
+          <article class="info-card">
+            <p class="card-kicker">After finalization</p>
+            <h3>Notes cleared</h3>
+            <p>
+              Segment notes are an intermediate processing artifact. They are
+              cleared after <code>/finalize-day</code>; only
+              <code>model.md</code> remains as durable state.
+            </p>
+          </article>
+        </div>
       </section>
 
       <section class="section-grid" aria-labelledby="state-title">

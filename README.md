@@ -44,6 +44,10 @@ The local AI path uses Whisper plus Ollama on equivalent local hardware. Cloud R
 
 See `PROCESSOR.md`.
 
+The processor also supports daily batch mode: each request becomes
+charter-filtered segment notes, and `/finalize-day` writes one integrated
+`model.md` at the end of the day.
+
 ## Cloud Run Review Deployment
 
 For a public review endpoint, the same static site can deploy to Google Cloud Run with scale-to-zero:
@@ -78,6 +82,7 @@ See `CLOUD_RUN.md`. This is intended for public static content review, not for p
 - `docs/` - source white paper PDF
 - `bin/zonetrip-serve` - local static server
 - `bin/zonetrip-capture-once` - local microphone capture helper for the real booth
+- `bin/zonetrip-finalize-day` - local end-of-day model integration helper
 - `deploy/systemd/` - optional systemd unit
 - `scripts/` - standalone audit and Linux package scripts
 - `Dockerfile` - Cloud Run compatible container

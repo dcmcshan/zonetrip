@@ -16,6 +16,7 @@ Environment=ZONETRIP_WHISPER_MODEL=base
 Environment=ZONETRIP_WHISPER_DEVICE=auto
 Environment=ZONETRIP_WHISPER_COMPUTE_TYPE=auto
 Environment=ZONETRIP_MODEL_PATH=/var/lib/zonetrip/model.md
+Environment=ZONETRIP_DAY_NOTES_PATH=/var/lib/zonetrip/day-notes.jsonl
 Environment=ZONETRIP_CHARTER_PATH=/opt/zonetrip/charter.md
 Environment=ZONETRIP_PULL_MODELS=0
 EnvironmentFile=-/etc/default/zonetrip-processor

@@ -17,6 +17,14 @@ Local path:
 7. Processor atomically writes the new `model.md`.
 8. Temporary audio and transcript buffers die with the request.
 
+Daily batch mode changes steps 5-7:
+
+1. Each audio segment is converted into charter-filtered derived notes.
+2. The raw audio and STT transcript die with the request.
+3. The day notes are held in `ZONETRIP_DAY_NOTES_PATH`.
+4. `/finalize-day` integrates those notes once into a replacement `model.md`.
+5. The day-notes file is cleared after finalization.
+
 Default local endpoints:
 
 - `GET http://127.0.0.1:8090/health`
@@ -25,6 +33,10 @@ Default local endpoints:
 Development-only endpoint:
 
 - `POST http://127.0.0.1:8090/process-stt`
+
+Daily batch endpoint:
+
+- `POST http://127.0.0.1:8090/finalize-day`
 
 `/process-stt` is disabled unless `ZONETRIP_ENABLE_DEV_STT=1` is set.
 
@@ -84,6 +96,31 @@ The browser/Pages route can still simulate capture for review, but it is not the
 The browser simulator uses Web Audio RMS as lightweight VAD. `idlePowerdownMs: 60000` dims the eight overhead spots after one minute without detected speech. This is a visual cue for Cloud Run scale-to-zero review; the physical local booth does not need a visitor UI to enforce this state.
 
 The processor also uses faster-whisper with `vad_filter=True`. If Whisper produces no transcript, `/process-audio` returns `422 no speech detected` and skips the `model.md` update.
+
+## Daily Batch Mode
+
+Gemma 3 12B is configured as the default local model and has a nominal long
+context window, but a full raw day can still exceed practical local memory and
+latency limits. Daily batch mode avoids reasoning over a saved full transcript.
+
+Enable it with:
+
+```sh
+sudo ZONETRIP_DAILY_BATCH_MODE=1 ./scripts/install-local-ai.sh
+```
+
+In this mode, `/process-audio` and development `/process-stt` generate
+charter-filtered segment notes instead of immediately rewriting `model.md`.
+The segment notes are derived material, not raw transcript. End the day with:
+
+```sh
+./bin/zonetrip-finalize-day
+```
+
+The processor then reads `charter.md`, current `model.md`, and the segment
+notes, writes one integrated replacement `model.md`, and clears the day-notes
+file. This matches the current simulation result: end-of-day reasoning produced
+a denser mirror than per-utterance updates without introducing charter failures.
 
 ## Cloud Run Simulator
 
